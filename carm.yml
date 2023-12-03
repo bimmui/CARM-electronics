@@ -1,0 +1,10 @@
+name: carm
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - codecov
+  - git
+  ## Web server
+  - django=4.2.7
