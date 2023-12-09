@@ -1,6 +1,6 @@
 # CARM Electronics
 
-This document provides instructions on setting up the Conda environment for the project using the provided "carm.yml" file.
+This document provides instructions on setting up the Conda environment for the project using the provided ```carm.yml``` file.
 
 ## Prerequisites
 
