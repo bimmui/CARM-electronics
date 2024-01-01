@@ -45,7 +45,7 @@ class DummyRocket:
             }
             for key, value in new_data.items():
                 self.time_series_data[key].append(value)
-            time.sleep(1)  # s1imulating one-second interval
+            time.sleep(0.1)  # simulating one-second interval
 
     def update_state(self, elapsed_time):
         if elapsed_time <= self.burnout_time:
