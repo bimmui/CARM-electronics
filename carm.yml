@@ -7,4 +7,6 @@ dependencies:
   - codecov
   - git
   ## Web server
-  - django=4.2.7
+  - dash=2.14.2
+  ## Data processing
+  - pandas=2.1.4
