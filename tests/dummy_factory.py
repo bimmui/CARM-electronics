@@ -19,7 +19,7 @@ class DummyRocket:
 
     The rocket simulation is very rough but follows that of 
     a generic parabolic curve given the time (x-value) the rocket should apogee.
-    The ``duration`` parameter of launch() should be changed to account for any change in
+    The ``duration`` parameter of ``launch()`` should be changed to account for any change in
     the burnout_time and apogee_time, but it isn't necessary.
     """
     

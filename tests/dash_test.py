@@ -29,8 +29,8 @@ def update_graph_live(n, hoverData):
     data = rocket.time_series_data
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['Time'], y=data['Altitude'], mode='lines+markers', name='Altitude', hoverinfo='x+y+text'))
-    fig.add_trace(go.Scatter(x=data['Time'], y=data['Velocity'], mode='lines+markers', name='Velocity', hoverinfo='x+y+text'))
+    fig.add_trace(go.Scatter(x=data['Time'], y=data['Altitude'], mode='lines+markers', name='Altitude', hoverinfo='none'))
+    fig.add_trace(go.Scatter(x=data['Time'], y=data['Velocity'], mode='lines+markers', name='Velocity', hoverinfo='none'))
 
     fig.update_layout(title_text='Rocket Altitude and Velocity',
                       xaxis_title='Time',
