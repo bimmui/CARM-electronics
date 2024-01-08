@@ -41,3 +41,4 @@ conda list
 3\. Navigate to the library manager. Download the following libraries and their dependencies. The version number at the time of writing is included.
 - `Adafruit BMP3XX Library` (ver 2.1.4)
 - `Adafruit_LSM9DS1` (ver 2.1.3)
+- `Adafruit_MCP9808` (ver 2.0.2)
