@@ -1,3 +1,15 @@
+/**************************************************************
+ *
+ *                     sensor_setup.h
+ *
+ *     Author(s):  Daniel Opara,
+ *     Date:       1/6/2023
+ *
+ *     Overview: Contains functions for setting up configurations for each sensor
+ *                  connected to the Feather M0
+ *
+ *
+ **************************************************************/
 
 /*
  * setupSensorIMU
@@ -31,7 +43,7 @@ void setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
  * Notes: The sensor was set up in I2C. For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-bmp388-bmp390-bmp3xx/overview
  */
-void setupSensorBMP(Adafruit_BMP3XX bmp_obj)
+void setupSensorBMP(Adafruit_BMP3XX &bmp_obj)
 {
     Serial.println("Setting up barometric pressure sensor...");
     if (!bmp_obj.begin_I2C())

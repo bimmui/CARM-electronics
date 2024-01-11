@@ -6,7 +6,12 @@ dependencies:
   - python=3.10
   - codecov
   - git
+  - pip
   ## Web server
   - dash=2.14.2
   ## Data processing
   - pandas=2.1.4
+  - pip:
+  ## Diagram Generation
+    - bit-field[JSON5]==1.0.1
+  - cairo
