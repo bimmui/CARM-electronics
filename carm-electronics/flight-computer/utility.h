@@ -5,7 +5,7 @@
  *     Author(s):  Daniel Opara,
  *     Date:       1/9/2023
  *
- *     Overview: Contains utility funtions
+ *     Overview: A collection of utility funtions
  *
  *
  **************************************************************/

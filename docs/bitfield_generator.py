@@ -1,3 +1,10 @@
+"""This module provides generates the bitfield schema seen in docs\\diagrams\\bitfield_diagram.png.
+It utilizes the Python port of the bitfield module developed by Arth-ur.
+
+For information on how to produce a similar diagram, visit https://github.com/Arth-ur/bitfield for the Python port
+and https://github.com/wavedrom/bitfield for the original module written in js.
+"""
+
 import cairosvg
 from PIL import Image
 from io import BytesIO
@@ -7,7 +14,7 @@ from bit_field import render, jsonml_stringify
 bit_organization = [
     {"name": "Frag #", "bits": 2, "type": 4},
     {"name": "Time (s)", "bits": 9, "type": 5},
-    {"name": "Internal Temp Sensor", "bits": 7, "type": 6},
+    {"name": "Internal Temp Sensor", "bits": 14, "type": 6},
     {"name": "External Temp Sensor", "bits": 7, "type": 6},
     {"name": "Barometric Pressure", "bits": 7, "type": 7},
     ################################################################

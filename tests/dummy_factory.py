@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
 # Author(s):
-
 #   Daniel Opara <hello@danielopara.me>
 
 
@@ -14,17 +11,20 @@ prototype to model how data received via telemetry would be passed to the Dash a
 import time
 import threading
 
+
 class DummyRocket:
     """Creates objects that simulates the velocity and altitude of a rocket when launched.
 
-    The rocket simulation is very rough but follows that of 
+    The rocket simulation is very rough but follows that of
     a generic parabolic curve given the time (x-value) the rocket should apogee.
     The ``duration`` parameter of ``launch()`` should be changed to account for any change in
     the burnout_time and apogee_time, but it isn't necessary.
+
+    TODO: Add more attributes to the rocket that would be transmitted down to the ground station
     """
-    
+
     def __init__(self):
-        self.time_series_data = {'Time': [], 'Altitude': [], 'Velocity': []}
+        self.time_series_data = {"Time": [], "Altitude": [], "Velocity": []}
         self.gravity = 9.8
         self.burnout_time = 5
         self.apogee_time = 10
@@ -39,9 +39,9 @@ class DummyRocket:
             elapsed_time = time.time() - start_time
             self.update_state(elapsed_time)
             new_data = {
-                'Time': elapsed_time,
-                'Altitude': self.altitude,
-                'Velocity': self.velocity
+                "Time": elapsed_time,
+                "Altitude": self.altitude,
+                "Velocity": self.velocity,
             }
             for key, value in new_data.items():
                 self.time_series_data[key].append(value)
@@ -54,8 +54,10 @@ class DummyRocket:
         else:
             time_since_burnout = elapsed_time - self.burnout_time
             self.velocity = 50 * self.burnout_time - 9.8 * time_since_burnout
-            self.altitude = 0.5 * self.gravity * self.burnout_time**2 - \
-                             0.5 * 9.8 * time_since_burnout**2
+            self.altitude = (
+                0.5 * self.gravity * self.burnout_time**2
+                - 0.5 * 9.8 * time_since_burnout**2
+            )
 
             if self.altitude < 0:
                 self.altitude = 0

@@ -15,3 +15,4 @@ dependencies:
   ## Diagram Generation
     - bit-field[JSON5]==1.0.1
   - cairo
+  - Pillow=10.0.1
