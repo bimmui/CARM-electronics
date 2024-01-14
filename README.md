@@ -2,7 +2,7 @@
 
 This repository houses the source code for the flight computer software running on our rocket, **CARM**, as well as the ground station software responsible for monitoring and collecting data from the rocket during its flight. Whether you're a member of our development team, a collaborator, or an enthusiast interested in rocketry and software, you've come to the right place.
 
-This document provides instructions on using the flight codsetting up the Conda environment for the project using the provided ```carm.yml``` file.
+This document provides instructions on setting up the Conda environment for the project using the provided ```carm.yml``` file and prepping your Arduino environment with the proper libraries.
 
 
 ## Getting Started
