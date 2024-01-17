@@ -6,6 +6,7 @@ length of your bitfields. This was used to determine the bitfield schema generat
 bitfield_generator.py.
 """
 
+# Change these values to reflect your project!
 HEADER_FIELD = 3
 WORD_SIZE = 32
 
@@ -41,12 +42,12 @@ def distribute_bitfields(bitfields, max_value_per_bucket):
 # list of bitfields and their values, replace with your bitfields as needed
 bitfield_list = [
     ("time", 8),
-    ("external temp", 13),
+    ("external temp", 14),
     ("internal temp: avbay", 12),
     ("internal temp: engine bay", 12),
-    ("altitude", 16),
-    ("barometric pressure", 14),
-    ("acceleration", 16),
+    ("altitude", 17),
+    ("barometric pressure", 15),
+    ("acceleration", 18),
     ("gyro shit", 10),
     ("gps coord: latitude", 28),
     ("gps coord: longitude", 29),
