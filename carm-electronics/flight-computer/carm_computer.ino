@@ -27,6 +27,31 @@
 #define BMP_CS 17
 #define SEALEVELPRESSURE_HPA (1013.25)
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//   Defining Rocket States
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// NOT TRANSMITTING MUCH FOR THESE GUYS
+// RECIEVING POWER
+bool POWER_ON
+// SENSOR VALUES HAVE STABILIZED
+bool LAUNCH_READY
+
+// WE ARE ACTUALLY TRANSMITTING HERE
+// INDICATORS FROM SENSOR TELL US WE ARE IN THIS MODE
+bool LAUNCH_MODE
+// TRANSITION FROM BURNOUT TO COAST PHASE IS WHEN JERK == 0 AND ACCEL IS NEGATIVE
+bool POWERED_FLIGHT_PHASE 
+bool COAST_PHASE
+
+bool APOGEE_PHASE // determined by barometric altitude
+bool DROGUE_DEPLOYMENT 
+bool MAIN_DEPLOYMENT
+bool RECOVERY_PHASE
+
+
+
+
 Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();
 Adafruit_BMP3XX bmp;
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
@@ -37,11 +62,11 @@ void setup()
     setupSensorIMU(lsm);
     setupSensorBMP(bmp);
     setupSensorTemp(tempsensor);
+    tempsensor.wake();
 }
 
 void loop()
 {
-    tempsensor.wake();
     // get readings from all the sensors
     lsm.read();
     sensors_event_t a, m, g, temp;
@@ -61,7 +86,7 @@ void loop()
 
     Serial.print("Pressure = ");
     Serial.print(bmp.pressure / 100.0);
-    Serial.println(" hPa");
+    Serial.println(" kPa");
 
     Serial.print("Approx. Altitude = ");
     Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
