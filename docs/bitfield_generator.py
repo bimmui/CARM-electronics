@@ -1,7 +1,7 @@
 # Author(s):
 #   Daniel Opara <hello@danielopara.me>
 
-"""This script generates the bitfield schema seen in docs\\diagrams\\bitfield_diagram.png.
+"""This script generates the bitfield schema seen in docs\\diagrams\\bitfield_schema.png.
 It utilizes the Python port of the bitfield module developed by Arth-ur.
 
 For information on how to produce a similar diagram, visit https://github.com/Arth-ur/bitfield for the Python port
@@ -45,10 +45,24 @@ bit_organization = [
     ################################################################
     {"name": "FRAG NUM", "bits": 3, "type": 4},
     {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
-    {"name": "GYRO", "bits": 9, "type": 10},
+    {"name": "GYRO_X", "bits": 9, "type": 10},
     {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
     {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
-    {"name": "ACCEL", "bits": 16, "type": 8},
+    {"name": "ACCEL_X", "bits": 16, "type": 8},
+    ################################################################
+    {"name": "FRAG NUM", "bits": 3, "type": 4},
+    {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
+    {"name": "GYRO_Y", "bits": 9, "type": 10},
+    {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
+    {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
+    {"name": "ACCEL_Y", "bits": 16, "type": 8},
+    ################################################################
+    {"name": "FRAG NUM", "bits": 3, "type": 4},
+    {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
+    {"name": "GYRO_Z", "bits": 9, "type": 10},
+    {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
+    {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
+    {"name": "ACCEL_Z", "bits": 16, "type": 8},
     ################################################################
     {"name": "FRAG NUM", "bits": 3, "type": 4},
     {"name": "ALT_DEC", "bits": 1, "type": 7, "rotate": -45},
@@ -67,8 +81,8 @@ bit_organization = [
 options = {
     "vspace": 100,
     "hspace": 1400,
-    "lanes": 6,
-    "bits": 192,
+    "lanes": 8,
+    "bits": 256,
     "hflip": True,
     "fontsize": 13,
 }
