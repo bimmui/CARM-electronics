@@ -15,7 +15,7 @@ Before doing anything, download the following:
 
 ### Python Environment Setup
 
-Follow the steps below to set up the Conda environment for the project:
+Follow the steps below (designed to work on Windows) to set up the Conda environment for the project:
 
 ```bash
 # 1. Clone the Repository
