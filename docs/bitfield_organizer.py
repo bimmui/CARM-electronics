@@ -7,7 +7,7 @@ bitfield_generator.py.
 """
 
 # Change these values to reflect your project!
-HEADER_FIELD = 3
+HEADER_FIELD = 4
 WORD_SIZE = 32
 
 

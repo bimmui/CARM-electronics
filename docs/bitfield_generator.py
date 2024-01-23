@@ -9,6 +9,7 @@ and https://github.com/wavedrom/bitfield for the original module written in js.
 """
 
 import cairosvg
+import json
 from PIL import Image
 from io import BytesIO
 from bit_field import render, jsonml_stringify
@@ -27,56 +28,27 @@ from bit_field import render, jsonml_stringify
     }"""
 
 
+def read_schema_json():
+    filename = input("Enter the name of the JSON file (without extension): ")
+    data = None
+    try:
+        with open(filename + ".json", "r") as file:
+            lines = file.readlines()
+            # Ignore lines starting with #
+            filtered_lines = [line for line in lines if not line.startswith("#")]
+            # Join the lines to form a valid JSON string
+            json_data = "".join(filtered_lines)
+            # Load the JSON data
+            data = json.loads(json_data)
+    except FileNotFoundError:
+        print(f"File '{filename}.json' not found.")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+    return data
+
+
 # Register description in JSON format
-bit_organization = [
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "TIME", "bits": 8, "type": 9},
-    {"name": "INT TEMP ENGINE", "bits": 12, "type": 2},
-    {"name": "ND", "bits": 9},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "GPS LAT_SIGN", "bits": 1, "type": 5, "rotate": -45},
-    {"name": "GPS LAT", "bits": 27, "type": 5},
-    {"name": "ND", "bits": 1},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "GPS LONG_SIGN", "bits": 1, "type": 5, "rotate": -45},
-    {"name": "GPS LONG", "bits": 28, "type": 5},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
-    {"name": "GYRO_X", "bits": 9, "type": 10},
-    {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
-    {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
-    {"name": "ACCEL_X", "bits": 16, "type": 8},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
-    {"name": "GYRO_Y", "bits": 9, "type": 10},
-    {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
-    {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
-    {"name": "ACCEL_Y", "bits": 16, "type": 8},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "GYRO_SIGN", "bits": 1, "type": 10, "rotate": -45},
-    {"name": "GYRO_Z", "bits": 9, "type": 10},
-    {"name": "ACCEL_DEC", "bits": 2, "type": 8, "rotate": -45},
-    {"name": "ACCEL_SIGN", "bits": 1, "type": 8, "rotate": -45},
-    {"name": "ACCEL_Z", "bits": 16, "type": 8},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "ALT_DEC", "bits": 1, "type": 7, "rotate": -45},
-    {"name": "ALT", "bits": 16, "type": 7},
-    {"name": "INT TEMP AVBAY", "bits": 12, "type": 2},
-    ################################################################
-    {"name": "FRAG NUM", "bits": 3, "type": 4},
-    {"name": "BAR PR_DEC", "bits": 1, "type": 6, "rotate": -45},
-    {"name": "BAR PR", "bits": 14, "type": 6},
-    {"name": "EXT TEMP_DEC", "bits": 1, "type": 2, "rotate": -45},
-    {"name": "EXT TEMP_SIGN", "bits": 1, "type": 2, "rotate": -45},
-    {"name": "EXT TEMP", "bits": 12, "type": 2},
-    ################################################################
-]
+bit_organization = read_schema_json()
 
 options = {
     "vspace": 100,

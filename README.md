@@ -10,6 +10,7 @@ The flight computer is based on the Adafruit Feather M0 RFM96 LoRa Radio (433MHz
 
 
 Before doing anything, download the following:
+- [Git](https://git-scm.com/)
 - [Arduino IDE](https://www.arduino.cc/en/software)
 - [Conda](https://docs.conda.io/en/latest/) or [Miniconda](https://docs.conda.io/projects/miniconda/en/latest/)
 
