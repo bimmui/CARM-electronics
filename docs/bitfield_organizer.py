@@ -31,10 +31,25 @@ def distribute_bitfields(bitfields, max_value_per_bucket):
                 field_added = True
                 break
 
-        # if the field canit fit in existing buckets, make new bucket
+        # if the field can't fit in existing buckets, distribute it across multiple buckets
         if not field_added:
-            buckets.append([HEADER_FIELD, field_value])
-            bucket_names.append(["HEADER_FIELD", field_name])
+            remaining_value = field_value
+            while remaining_value > 0:
+                # create a new bucket for the remaining part of the field
+                new_bucket = [HEADER_FIELD]
+                new_bucket_name = ["HEADER_FIELD", field_name]
+
+                # determine how much of the field can fit in the new bucket
+                amount_to_add = min(max_value_per_bucket - sum(new_bucket), remaining_value)
+
+                # add the partial field to the new bucket
+                new_bucket.append(amount_to_add)
+                bucket_names[-1].append(field_name)
+
+                remaining_value -= amount_to_add
+
+                buckets.append(new_bucket)
+                bucket_names.append(new_bucket_name)
 
     return buckets, bucket_names
 

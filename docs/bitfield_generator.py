@@ -25,6 +25,8 @@ from bit_field import render, jsonml_stringify
         '7': 215,
         '8': 20,
         '9': 420,
+        '10': 200,
+        '11': 250
     }"""
 
 
