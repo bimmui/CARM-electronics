@@ -9,8 +9,8 @@ This document provides instructions on setting up the Conda environment for the 
 The flight computer is based on the Adafruit Feather M0 RFM96 LoRa Radio (433MHz) and utilizes the Arduino environment for ease of library management and quick development. Therefore, the Arduino IDE is recommened for writing the flight code. The ground station uses Dash, a Python framework made by Plotly for creating interactive web applications. All Python packages are managed using Conda, however, you are free to use any package manager of your choosing.
 
 
-Before doing anything, download the following:
-- [Git](https://git-scm.com/)
+Before doing anything, install the following:
+- [Git](https://git-scm.com/downloads)
 - [Arduino IDE](https://www.arduino.cc/en/software)
 - [Conda](https://docs.conda.io/en/latest/) or [Miniconda](https://docs.conda.io/projects/miniconda/en/latest/)
 
