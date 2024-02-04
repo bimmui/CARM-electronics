@@ -36,7 +36,7 @@ styles = {
 def read_schema_json():
     filename = input("Enter the name of the JSON file (without extension): ")
     data = None
-    path = f"bitfield-schemas\\{filename}.json"
+    path = f"bitfield-schema-source\\{filename}.json"
     try:
         with open(path, "r") as file:
             lines = file.readlines()
