@@ -37,3 +37,17 @@ double convertToDecimalDegrees(double coordinate, char direction)
     decimal_degrees = round(decimal_degrees * 10000.0) / 10000.0;
     return decimal_degrees;
 }
+
+/*
+ * mps_to_mph
+ * Parameters: Speed in meters per second
+ * Purpose: Converts speed from meters per second to miles per hour
+ * Returns: Speed in miles per hour
+ * Notes: None
+ */
+template <typename T>
+T mps_to_mph(T mps)
+{
+    return mps * 2.236936;
+}
+
