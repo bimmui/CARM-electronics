@@ -44,3 +44,4 @@ conda list
 - `Adafruit_LSM9DS1` (ver 2.1.3)
 - `Adafruit_MCP9808` (ver 2.0.2)
 - `Adafruit GPS` (ver 1.7.4)
+- `SD` (ver 1.2.4)
