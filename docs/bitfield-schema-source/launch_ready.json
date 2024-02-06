@@ -1,3 +1,6 @@
+# the first list is the actual bitfield organization
+# the second list are the addititional parameters for generating the image
+# the bits and lanes parameters is a must have and will vary from schema to schema
 [
     [
         {"name": "STATE", "bits": 4, "type": 4},
