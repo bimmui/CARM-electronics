@@ -17,6 +17,7 @@
 #include <Adafruit_LSM9DS1.h> // IMU module
 #include "Adafruit_BMP3XX.h"  // BMP module
 #include "Adafruit_MCP9808.h" // Temp sensor module
+#include <Adafruit_GPS.h>     // GPS module
 #include "bb_setup.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -33,6 +34,7 @@
 #define BMP_CS 17
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define CHIPSELECT 13
+#define GPSSerial Serial1
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining sensor objects and structs
@@ -43,25 +45,7 @@ Adafruit_BMP3XX bmp;                                     // barometric pressure 
 Adafruit_MCP9808 tempsensor_avbay = Adafruit_MCP9808();  // avionics bay thermocouple
 Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808(); // engine bay thermocouple
 File launch_data;                                        // file object for writing data
-
-struct SensorData
-{
-    float time;
-    float temperature_av;
-    float temperature_eng;
-    float bmp_temp;
-    float pressure;
-    float altitude;
-    float accel_x;
-    float accel_y;
-    float accel_z;
-    float mag_x;
-    float mag_y;
-    float mag_z;
-    float gyro_x;
-    float gyro_y;
-    float gyro_z;
-};
+Adafruit_GPS GPS(&GPSSerial);                            // hardware GPS object
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining Rocket States
@@ -88,6 +72,9 @@ bool RECOVERY_PHASE;
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+String readSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
+                   Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2);
+void storeSensorData(String sensor_data, );
 
 void setup()
 {
@@ -96,11 +83,12 @@ void setup()
     bool bmp_setup = setupSensorBMP(bmp);
     bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
     bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
+    bool gps_setup = setupGPS(GPS);
 
     // pinMode(CHIPSELECT, OUTPUT);
     bool sd_setup = setupSD(CHIPSELECT);
     // TODO: Add a case where the SD card module setup func returns false
-    launch_data = SD.open("initialzing.txt", FILE_WRITE);
+    launch_data = SD.open("initializing.txt", FILE_WRITE);
     if (launch_data)
     {
         if (imu_setup)
@@ -137,6 +125,14 @@ void setup()
         else
         {
             launch_data.println("Engine bay temp. sensor unsuccessfully set up");
+        }
+        if (gps_setup)
+        {
+            launch_data.println("GPS module successfully set up");
+        }
+        else
+        {
+            launch_data.println("GPS module unsuccessfully set up");
         }
 
         launch_data.close();
