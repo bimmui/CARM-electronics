@@ -134,3 +134,20 @@ bool setupSD(int chipnum)
     }
     return false;
 }
+
+/*
+ * setupGPS
+ * Parameters:
+ * Purpose:
+ * Returns:
+ * Notes:
+ * TODO: Need to figure how setting up the GPS module can go wrong so we can return
+ *          false when it does
+ */
+bool setupGPS(Adafruit_GPS &gps_obj)
+{
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+    GPS.sendCommand(PGCMD_ANTENNA);
+    return true;
+}
