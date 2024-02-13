@@ -38,7 +38,7 @@
 // BMP_CS == CS
 #define BMP_CS 17
 #define SEALEVELPRESSURE_HPA (1013.25)
-#define CHIPSELECT 13
+#define SD_CS 13
 #define GPSSerial Serial1
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -106,7 +106,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
 void storeSensorData(SensorData &sensor_data);
 // TODO: Complete this function. Also test if constantly
 //         switching devices is a thing that can be done
-void switchSPIDevice();
+void switchSPIDevice(int cs_pin);
 // TODO: Add function that switches states.
 
 void setup()
@@ -119,7 +119,7 @@ void setup()
     bool gps_setup = setupGPS(GPS);
 
     // Switch the spi device before setting up the SD card module
-
+    switchSPIDevice(SD_CS);
     bool sd_setup = setupSD(CHIPSELECT);
     // TODO: Add a case where the SD card module setup func returns false
     File init_data = SD.open("initializing.txt", FILE_WRITE);
@@ -180,6 +180,14 @@ void loop()
     storeSensorData(data);
 }
 
+/*
+ * readSensors
+ * Parameters: Pointers to an instantiated SensorData struct, IMU sensor object,
+ *              barometric pressure sensor object, and two temp sensor objects respectively
+ * Purpose: Gets readings from sensors and put them into the aforementioned SensorData struct
+ * Returns: Nothing
+ * Notes: None
+ */
 void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
                  Adafruit_MCP9808 &tempsensor_obj2)
@@ -194,6 +202,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     }
 
     // store the sensor readings in the struct
+    // TODO: Be able to have T+ launch time
     sensor_data.time = millis();                                  // TODO: change this to be T+ time
     sensor_data.temperature_avbay = tempsensor_obj1.readTempC();  // TODO: add error handling
     sensor_data.temperature_engbay = tempsensor_obj2.readTempC(); // TODO: add error handling
@@ -210,6 +219,14 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_z = g.gyro.z;
 }
 
+/*
+ * storeSensorData
+ * Parameters: A pointer to an instantiated SensorData struct
+ * Purpose: Prints every variable in the struct to the launch
+ *          data file in csv format
+ * Returns: Nothing
+ * Notes: None
+ */
 void storeSensorData(SensorData &sensor_data)
 {
     launch_data = SD.open("datalog.csv", FILE_WRITE);
@@ -249,5 +266,29 @@ void storeSensorData(SensorData &sensor_data)
     else
     {
         Serial.println("error opening datalog.csv");
+    }
+}
+
+/*
+ * switchSPIDevice
+ * Parameters: An integer that represents the CS pin of an SPI device
+ * Purpose: Switches the SPI device to communicate with.
+ * Returns: Nothing
+ * Notes: The Feather can only "talk" to one device at a time so we much switch
+ *          the CS pin that is being listened to before using the respective device
+ */
+void switchSPIDevice(int cs_pin)
+{
+    // we want to use radio in this
+    if (cs_pin == RFM95_CS)
+    {
+        digitalWrite(SD_CS, HIGH);
+        digitalWrite(RFM95_CS, LOW);
+    }
+    // we want to use the sd card module in this
+    if (cs_pin == SD_CS)
+    {
+        digitalWrite(RFM95_CS, HIGH);
+        digitalWrite(SD_CS, LOW);
     }
 }
