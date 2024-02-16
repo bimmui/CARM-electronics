@@ -3,7 +3,7 @@
  *                     utility.h
  *
  *     Author(s):  Daniel Opara,
- *     Date:       1/9/2023
+ *     Date:       1/9/2024
  *
  *     Overview: A collection of utility funtions
  *
@@ -36,4 +36,17 @@ double convertToDecimalDegrees(double coordinate, char direction)
 
     decimal_degrees = round(decimal_degrees * 10000.0) / 10000.0;
     return decimal_degrees;
+}
+
+/*
+ * calculateAverageAcceleration
+ * Parameters: The acceleration in the x, y, and z direction
+ * Purpose: Calculates the average acceleration of the rocket
+ * Returns: Nothing
+ * Notes:
+ */
+float calculateAverageAcceleration(float x_accel, float y_accel, float z_accel)
+{
+    float sum_squared_coordinates = (x_accel * x_accel) + (y_accel * y_accel) + (z_accel * z_accel);
+    return sqrt(sum_squared_coordinates);
 }

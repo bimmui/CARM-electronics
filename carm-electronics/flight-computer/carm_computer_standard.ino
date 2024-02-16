@@ -14,32 +14,14 @@
 #include <Wire.h>
 #include <SD.h>
 #include <Adafruit_Sensor.h>
+#include <cppQueue.h>
 #include <Adafruit_LSM9DS1.h> // IMU module
 #include "Adafruit_BMP3XX.h"  // BMP module
 #include "Adafruit_MCP9808.h" // Temp sensor module
 #include <Adafruit_GPS.h>     // GPS module
 #include "bb_setup.h"
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   Defining digital pins, constants, and sensor objects
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-#define RFM95_CS 8
-#define RFM95_RST 4
-#define RFM95_INT 7
-#define RF95_FREQ 433.0
-
-// Ejection Charge Pin #1 (J1)
-#define J1 24
-// Ejection Charge Pin #2 (J2)
-#define J2 23
-// BMP_SCK == SCL
-#define BMP_SCK 18
-// BMP_CS == CS
-#define BMP_CS 17
-#define SEALEVELPRESSURE_HPA (1013.25)
-#define SD_CS 13
-#define GPSSerial Serial1
+#include "def.h"
+#include "utility.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining sensor objects and structs
@@ -76,26 +58,40 @@ struct SensorData
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   Defining Rocket States
+//   Defining Rocket States and relevant indicators
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // NOT TRANSMITTING MUCH FOR THESE GUYS
 // RECIEVING POWER
-bool POWER_ON;
+bool POWER_ON = true;
 // SENSOR VALUES HAVE STABILIZED
-bool LAUNCH_READY;
+bool LAUNCH_READY = false;
 
 // WE ARE ACTUALLY TRANSMITTING HERE
 // INDICATORS FROM SENSOR TELL US WE ARE IN THIS MODE
-bool LAUNCH_MODE;
+bool LAUNCH_MODE = false;
 // TRANSITION FROM BURNOUT TO COAST PHASE IS WHEN JERK == 0 AND ACCEL IS NEGATIVE
-bool POWERED_FLIGHT_PHASE;
-bool COAST_PHASE;
+bool POWERED_FLIGHT_PHASE = false;
+bool COAST_PHASE = false;
 
-bool APOGEE_PHASE; // determined by barometric altitude
-bool DROGUE_DEPLOYMENT;
-bool MAIN_DEPLOYMENT;
-bool RECOVERY_PHASE;
+bool APOGEE_PHASE = false;
+bool DROGUE_DEPLOYED_PHASE = false;
+bool MAIN_DEPLOY_ATTEMPT = false;
+bool MAIN_DEPLOYED_PHASE = false;
+bool RECOVERY_PHASE = false;
+
+// we use a moving average implemented with queues to detect when to change states
+cppQueue velocity_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
+cppQueue accel_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
+cppQueue altitude_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
+
+// a moving sum is also calculated to reduce time spent interating through
+//      each index in the array to get the average
+float curr_velocity_sum;
+float curr_accel_sum;
+float curr_altitude_sum;
+
+unsigned int launch_start_time;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
@@ -107,7 +103,7 @@ void storeSensorData(SensorData &sensor_data);
 // TODO: Complete this function. Also test if constantly
 //         switching devices is a thing that can be done
 void switchSPIDevice(int cs_pin);
-// TODO: Add function that switches states.
+void stateDeterminer();
 
 void setup()
 {
@@ -122,7 +118,7 @@ void setup()
     switchSPIDevice(SD_CS);
     bool sd_setup = setupSD(CHIPSELECT);
     // TODO: Add a case where the SD card module setup func returns false
-    File init_data = SD.open("initializing.txt", FILE_WRITE);
+    File init_data = SD.open("init.txt", FILE_WRITE);
     if (init_data)
     {
         if (imu_setup)
@@ -176,6 +172,7 @@ void setup()
 void loop()
 {
     SensorData data = {0};
+    stateDeterminer();
     readSensors(data, lsm, bmp, tempsensor_avbay, tempsensor_engbay);
     storeSensorData(data);
 }
@@ -186,7 +183,8 @@ void loop()
  *              barometric pressure sensor object, and two temp sensor objects respectively
  * Purpose: Gets readings from sensors and put them into the aforementioned SensorData struct
  * Returns: Nothing
- * Notes: None
+ * Notes: Pushes the current measurements of the velocity, acceleration, and altitude to their
+ *          respective queue
  */
 void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
@@ -202,8 +200,9 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     }
 
     // store the sensor readings in the struct
-    // TODO: Be able to have T+ launch time
-    sensor_data.time = millis();                                  // TODO: change this to be T+ time
+    // TODO: Be able to have T+ launch time instead of total time
+    //          the Feather was running
+    sensor_data.time = millis() - launch_start_time;              // TODO: change this to be T+ time
     sensor_data.temperature_avbay = tempsensor_obj1.readTempC();  // TODO: add error handling
     sensor_data.temperature_engbay = tempsensor_obj2.readTempC(); // TODO: add error handling
     sensor_data.pressure = bmp_obj.pressure / 100.0;
@@ -217,6 +216,10 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_x = g.gyro.x;
     sensor_data.gyro_y = g.gyro.y;
     sensor_data.gyro_z = g.gyro.z;
+
+    velocity_q.push(&sensor_data.altitude);
+    accel_q.push(&sensor_data.altitude);
+    altitude_q.push(&sensor_data.altitude);
 }
 
 /*
@@ -265,7 +268,14 @@ void storeSensorData(SensorData &sensor_data)
     }
     else
     {
-        Serial.println("error opening datalog.csv");
+        error_data = SD.open("errlog.txt", FILE_WRITE);
+        if (error_data)
+        {
+            error_data.print(millis() - launch_start_time);
+            error_data.print(": ");
+            error_data.println("Error logging flight data");
+            error_data.close();
+        }
     }
 }
 

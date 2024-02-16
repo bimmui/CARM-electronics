@@ -45,3 +45,4 @@ conda list
 - `Adafruit_MCP9808` (ver 2.0.2)
 - `Adafruit GPS` (ver 1.7.4)
 - `SD` (ver 1.2.4)
+- `Queue` (ver 1.11)

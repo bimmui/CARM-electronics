@@ -3,7 +3,7 @@
  *                     carm_computer_telemetry.ino
  *
  *     Author(s):  Daniel Opara,
- *     Date:       1/6/2023
+ *     Date:       1/6/2024
  *
  *     Overview: Driver code for the rocket computer. Gets readings from the sensors
  *                  connected to it and transmits the data to the ground station.
