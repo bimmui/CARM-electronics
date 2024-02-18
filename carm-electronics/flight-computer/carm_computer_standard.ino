@@ -3,7 +3,7 @@
  *                     carm_computer_standard.ino
  *
  *     Author(s):  Daniel Opara, Kenny Chua
- *     Date:       1/6/2023
+ *     Date:       1/6/2024
  *
  *     Overview: Driver code for the rocket computer. Gets readings from the sensors
  *                  connected to it and writes it to an SD card.
@@ -54,31 +54,34 @@ struct SensorData
     float gyro_z;
     float gps_lat;
     float gps_long;
-    int state;
+    float gps_speed;
+    float gps_angle;
+    int gps_fix;
+    int gps_quality;
+    int gps_num_satellites;
+    int gps_antenna_status;
+    int curr_state;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining Rocket States and relevant indicators
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+// Define state type and variable which defines mutually exclusive
+// flight states to inform what we're supposed
+typedef enum state = {POWER_ON = 0, LAUNCH_READY, POWERED_FLIGHT_PHASE,
+                      COAST_PHASE, APOGEE_PHASE, DROGUE_DEPLOYED,
+                      MAIN_DEPLOY_ATTEMPT, MAIN_DEPLOYED, RECOVERY} state;
+
 // NOT TRANSMITTING MUCH FOR THESE GUYS
 // RECIEVING POWER
 bool POWER_ON = true;
 // SENSOR VALUES HAVE STABILIZED
 bool LAUNCH_READY = false;
-
 // WE ARE ACTUALLY TRANSMITTING HERE
 // INDICATORS FROM SENSOR TELL US WE ARE IN THIS MODE
-bool LAUNCH_MODE = false;
 // TRANSITION FROM BURNOUT TO COAST PHASE IS WHEN JERK == 0 AND ACCEL IS NEGATIVE
-bool POWERED_FLIGHT_PHASE = false;
-bool COAST_PHASE = false;
-
-bool APOGEE_PHASE = false;
-bool DROGUE_DEPLOYED_PHASE = false;
-bool MAIN_DEPLOY_ATTEMPT = false;
-bool MAIN_DEPLOYED_PHASE = false;
-bool RECOVERY_PHASE = false;
+bool POWERED_FLIGHT_PHASE = false; // have a timer condition in addition to the accelertaio condition
 
 // we use a moving average implemented with queues to detect when to change states
 cppQueue velocity_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
@@ -90,15 +93,19 @@ cppQueue altitude_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
 float curr_velocity_sum;
 float curr_accel_sum;
 float curr_altitude_sum;
+float curr_velocity_sum;
+float curr_velocity;
 
 unsigned int launch_start_time;
+unsigned int curr_time;
+unsigned int prev_time;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
-                 Adafruit_MCP9808 &tempsensor_obj2);
+                 Adafruit_MCP9808 &tempsensor_obj2, Adafruit_GPS &gps_obj);
 void storeSensorData(SensorData &sensor_data);
 // TODO: Complete this function. Also test if constantly
 //         switching devices is a thing that can be done
@@ -184,29 +191,52 @@ void loop()
  * Purpose: Gets readings from sensors and put them into the aforementioned SensorData struct
  * Returns: Nothing
  * Notes: Pushes the current measurements of the velocity, acceleration, and altitude to their
- *          respective queue
+ *          respective queue for moving average calculations
  */
 void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
-                 Adafruit_MCP9808 &tempsensor_obj2)
+                 Adafruit_MCP9808 &tempsensor_obj2, Adafruit_GPS &gps_obj)
 {
-    // get readings from all the sensors that store them in the sensor objects themselves
+    // imu reading
     lsm_obj.read();
     sensors_event_t a, m, g, temp;
     lsm_obj.getEvent(&a, &m, &g, &temp);
+
+    // bmp reading
     if (!bmp_obj.performReading())
     {
-        // TODO: Do something that informs the struct that the reading didnt occur
+        // just fill the struct with negative values here so it is clear that reading failed
+        sensor_data.pressure = -1111111;
+        sensor_data.altitude = -1111111;
+    }
+    else
+    {
+        sensor_data.pressure = bmp_obj.pressure / 100.0;
+        sensor_data.altitude = bmp_obj.readAltitude(SEALEVELPRESSURE_HPA);
+    }
+
+    // gps reading
+    GPS.read();
+    if (GPS.newNMEAreceived())
+    {
+        if (GPS.parse(GPS.lastNMEA()))
+        {
+            // bc we can fail to parse a sentence, we only bother adding gps data if we get new data and
+            // successfully parse it, otherwise, we just wait for another sentence
+            sensor_data.gps_fix = gps_obj.fix;
+            sensor_data.gps_quality = gps_obj.quality;
+            sensor_data.gps_num_satellites = gps_obj.satellites;
+            sensor_data.gps_antenna_status = gps_obj.antenna;
+        }
     }
 
     // store the sensor readings in the struct
     // TODO: Be able to have T+ launch time instead of total time
-    //          the Feather was running
-    sensor_data.time = millis() - launch_start_time;              // TODO: change this to be T+ time
-    sensor_data.temperature_avbay = tempsensor_obj1.readTempC();  // TODO: add error handling
-    sensor_data.temperature_engbay = tempsensor_obj2.readTempC(); // TODO: add error handling
-    sensor_data.pressure = bmp_obj.pressure / 100.0;
-    sensor_data.altitude = bmp_obj.readAltitude(SEALEVELPRESSURE_HPA); // TODO: add error handling
+    prev_time = curr_time;
+    curr_time = millis() - launch_start_time;
+    sensor_data.time = curr_time; // TODO: change this to be T+ time
+    sensor_data.temperature_avbay = tempsensor_obj1.readTempC();
+    sensor_data.temperature_engbay = tempsensor_obj2.readTempC();
     sensor_data.accel_x = a.acceleration.x;
     sensor_data.accel_y = a.acceleration.y;
     sensor_data.accel_z = a.acceleration.z;
@@ -216,7 +246,10 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_x = g.gyro.x;
     sensor_data.gyro_y = g.gyro.y;
     sensor_data.gyro_z = g.gyro.z;
+    sensor_data.curr_state = state;
 
+    // TODO: use Noah's movingAvg class to add new values to the queues
+    //          so change the syuff below
     velocity_q.push(&sensor_data.altitude);
     accel_q.push(&sensor_data.altitude);
     altitude_q.push(&sensor_data.altitude);
@@ -301,4 +334,16 @@ void switchSPIDevice(int cs_pin)
         digitalWrite(RFM95_CS, HIGH);
         digitalWrite(SD_CS, LOW);
     }
+}
+
+/*
+ * stateDeterminer
+ * Parameters: None
+ * Purpose: Switches the state the rocket is in based on
+ * Returns: Nothing
+ * Notes: The Feather can only "talk" to one device at a time so we much switch
+ *          the CS pin that is being listened to before using the respective device
+ */
+void stateDeterminer()
+{
 }

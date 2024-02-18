@@ -11,6 +11,7 @@
  **************************************************************/
 
 #include <math.h>
+#include "def.h"
 
 /*
  * convertToDecimalDegrees
@@ -49,4 +50,35 @@ float calculateAverageAcceleration(float x_accel, float y_accel, float z_accel)
 {
     float sum_squared_coordinates = (x_accel * x_accel) + (y_accel * y_accel) + (z_accel * z_accel);
     return sqrt(sum_squared_coordinates);
+}
+
+/*
+ * calculateCurrVelocity
+ * Parameters: The acceleration in the x, y, and z direction
+ * Purpose: Calculates the average acceleration of the rocket
+ * Returns: Nothing
+ * Notes:
+ */
+float calculateCurrVelocity(float prev_velocity, float y_accel, float z_accel)
+{
+}
+
+/*
+ * calculateAverageAcceleration
+ * Parameters: Pointers to the queues used for calculating the moving average of
+ *                 velocity, altitude, and acceleration
+ * Purpose: Fills up the queues with values before starting the main control loop
+ * Returns: Nothing
+ * Notes: The queues need to be filled up to prevent any undefined behavior when doing
+ *              calculations with empty indicies
+ */
+void setupMovingAvgArrs(cppQueue velocity_arr, cppQueue altitude_arr, cppQueue accel_arr,
+                        Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj, )
+{
+    // Take QUEUE_MAX_LENGTH readings from each sensor and store in their
+    // moving average queues
+    for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
+    {
+        //
+    }
 }
