@@ -109,7 +109,7 @@ static int32_t shift_right_arith(uint32_t word, unsigned bits)
     assert(bits <= MAX_BYTES);
     if (bits == MAX_BYTES)
     {
-        bits = 63;
+        bits = 31;
     }
     return ((int32_t)word) >> bits;
 }
