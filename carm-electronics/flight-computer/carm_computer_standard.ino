@@ -346,4 +346,7 @@ void switchSPIDevice(int cs_pin)
  */
 void stateDeterminer()
 {
+    if (state = 0)
+    {
+    }
 }

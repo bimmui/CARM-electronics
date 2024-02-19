@@ -5,7 +5,7 @@
  *     Author(s):  Daniel Opara
  *     Date:       2/15/2024
  *
- *     Overview: Defines constants for pins, functions, etc.
+ *     Overview: Defines constants for pins, function params, etc.
  *
  *
  **************************************************************/
