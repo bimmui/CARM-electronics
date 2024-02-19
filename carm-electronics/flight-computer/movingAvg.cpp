@@ -1,4 +1,4 @@
-/* moving_avg.c
+/* moving_avg.cpp
  * Noah Stiegler
  * 2/18/24
  *
@@ -26,8 +26,8 @@ movingAvg(unsigned moving_avg_window)
 {
     sum = 0;                      // If it's empty we'll call it a 0 average (0/0 = 0)
     capacity = moving_avg_window; // Number of values to average over
-    vals = cppQueue(sizeof(float), moving_avg_window, IMPLEMENTATION)
-        used = 0; // How many values are in the queue (before it's full)
+    cppQueue vals = cppQueue(sizeof(float), moving_avg_window, IMPLEMENTATION);
+    used = 0; // How many values are in the queue (before it's full)
 }
 
 void take_new_measurement(float val)
@@ -43,13 +43,8 @@ void take_new_measurement(float val)
         // Increase used by 1
     }
 }
+
 float get_average()
 {
     return sum / (1.0 * capacity); // return average, making sure capacity is float to ensure float division
-}
-
-// See if queue is full or values still need to be added
-bool isFull()
-{
-    return used == capacity;
 }
