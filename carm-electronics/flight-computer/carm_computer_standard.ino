@@ -22,6 +22,7 @@
 #include "bb_setup.h"
 #include "def.h"
 #include "utility.h"
+#include "MovingAvg"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining sensor objects and structs
