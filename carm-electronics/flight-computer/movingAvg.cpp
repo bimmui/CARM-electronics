@@ -10,7 +10,7 @@
  *
  */
 
-#include "movingAvg.h"
+#include "MovingAvg.h"
 
 /*
  * movingAvg constructor
@@ -22,7 +22,7 @@
  * Notes: Creates an EMPTY moving average which has no value defined (returns 0)
  *
  */
-movingAvg(unsigned moving_avg_window)
+MovingAvg(unsigned moving_avg_window)
 {
     sum = 0;                      // If it's empty we'll call it a 0 average (0/0 = 0)
     capacity = moving_avg_window; // Number of values to average over

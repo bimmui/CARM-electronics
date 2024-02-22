@@ -15,10 +15,10 @@
 #include <stdint.h>
 #include "def.h"
 
-class movingAvg:
+class MovingAvg:
 {
 public:
-    movingAvg(unsigned moving_avg_window);
+    MovingAvg(unsigned moving_avg_window);
     void take_new_measurement(float val); //
     float get_average();                  // returns running sum
 

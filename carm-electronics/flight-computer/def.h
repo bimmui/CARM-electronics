@@ -29,3 +29,11 @@
 // queue constants
 #define IMPLEMENTATION FIFO
 #define QUEUE_MAX_LENGTH 10
+
+enum sensor_type
+{
+    IMU,
+    BMP,
+    TEMP,
+    GPS,
+};
