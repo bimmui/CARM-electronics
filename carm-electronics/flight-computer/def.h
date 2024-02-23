@@ -28,4 +28,4 @@
 #define GPSSerial Serial1
 // queue constants
 #define IMPLEMENTATION FIFO
-#define QUEUE_MAX_LENGTH 10
+#define QUEUE_MAX_LENGTH 20

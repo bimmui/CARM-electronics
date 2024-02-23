@@ -96,8 +96,6 @@ float curr_altitude;
 float max_altitude;
 
 unsigned int launch_start_time;
-unsigned int curr_time;
-unsigned int prev_time;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
@@ -115,6 +113,8 @@ void setup()
 {
     Serial.begin(115200); // serial used for testing
     state = POWER_ON;
+    pinMode(J1, OUTPUT);
+    pinMode(J2, OUTPUT);
     bool imu_setup = setupSensorIMU(lsm);
     bool bmp_setup = setupSensorBMP(bmp);
     bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
@@ -252,10 +252,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     }
 
     // store the sensor readings in the struct
-    // TODO: Be able to have T+ launch time instead of total time
-    prev_time = curr_time;
-    curr_time = millis() - launch_start_time;
-    sensor_data.time = curr_time; // TODO: change this to be T+ time
+    sensor_data.time = millis() - launch_start_time;
     sensor_data.temperature_avbay = tempsensor_obj1.readTempC();
     sensor_data.temperature_engbay = tempsensor_obj2.readTempC();
     sensor_data.accel_x = a.acceleration.x;
@@ -290,6 +287,8 @@ void storeSensorData(SensorData &sensor_data)
     launch_data = SD.open("datalog.csv", FILE_WRITE);
     if (launch_data)
     {
+        launch_data.print(sensor_data.curr_state);
+        launch_data.print(",");
         launch_data.print(sensor_data.time);
         launch_data.print(",");
         launch_data.print(sensor_data.temperature_avbay);
@@ -372,6 +371,7 @@ void stateDeterminer()
     {
         if ((curr_accel > moving_accel.get_average()) && (curr_altitude > moving_altitude.get_average()))
         {
+            launch_start_time = millis();
             state = LAUNCHING;
             return;
         }
@@ -390,7 +390,10 @@ void stateDeterminer()
     {
         if (curr_altitude < max_altitude)
         {
-            state = LAUNCHING;
+            // TODO: Figure out which of the ejection charge pins should be set to HIGH
+            digitalWrite(J1, HIGH);
+            delay(500);
+            digitalWrite(J1, LOW);
             return;
         }
     }
