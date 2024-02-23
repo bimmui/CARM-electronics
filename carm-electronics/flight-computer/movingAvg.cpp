@@ -25,6 +25,8 @@
 MovingAvg::MovingAvg() : vals(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION, false)
 {
     sum = 0;
+    partial_sum = 0;
+    partial_sum_nums = 0;
 }
 
 /*
@@ -41,13 +43,15 @@ MovingAvg::~MovingAvg()
 
 /*
  * init
- * Parameters: An array of float values
- * Purpose: Fills the cppQueue with QUEUE_MAX_LENGTH readings
+ * Parameters: An array of float values and the length of the subset of values that
+ *                will be used to calculate a partial average.
+ * Purpose: Fills the cppQueue with QUEUE_MAX_LENGTH readings and sets proper values
+ *              for sum and partial sum
  * Notes: Must call this function before calling anything else of this class, you're
  *          more likely to get undefined behavior this way
  *
  */
-MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH]) : vals(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION, false)
+MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count)
 {
     sum = 0;
     for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
@@ -55,6 +59,11 @@ MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH]) : vals(sizeof(float), Q
         vals.push(&(sensor_readings[i]));
         sum += sensor_readings[i];
     }
+    for (int i = 0; i < partial_sum_count; i++)
+    {
+        partial_sum += sensor_readings[i];
+    }
+    partial_sum_nums = partial_sum_count
 }
 
 /*
@@ -92,6 +101,18 @@ void MovingAvg::add_new_measurement(float new_val)
  *
  */
 float MovingAvg::get_average()
+{
+    return sum / (1.0 * QUEUE_MAX_LENGTH);
+}
+
+/*
+ * get_partial_average
+ * Parameters: An integer that represents the number of
+ * Purpose: Calculates the average of the values in the queue
+ * Notes: None
+ *
+ */
+float MovingAvg::get_partial_average()
 {
     return sum / (1.0 * QUEUE_MAX_LENGTH);
 }

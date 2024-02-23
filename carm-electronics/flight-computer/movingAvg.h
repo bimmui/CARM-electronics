@@ -21,13 +21,16 @@
 class MovingAvg
 {
 public:
-    MovingAvg(float sensor_readings[QUEUE_MAX_LENGTH]);
+    MovingAvg(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count);
     void add_new_measurement(float new_val);
     float get_average();
+    float get_partial_average();
 
 private:
     cppQueue vals;
     float sum;
+    float partial_sum;
+    int partial_sum_nums;
 };
 
 #endif
