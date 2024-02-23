@@ -1,50 +1,97 @@
-/* moving_avg.cpp
- * Noah Stiegler
- * 2/18/24
+/**************************************************************
  *
- * A class for keeping track of a moving average of sensor readings within
- * a given window (number of values to average over). Floating point values
- * can be added to the average and the average can be read.
+ *                     MovingAvg.cpp
  *
- * Implemented with a cppQueue. The queue can have
+ *     Author(s):  Noah Stiegler, Daniel Opara
+ *     Date:       2/18/2024
  *
- */
+ *     Overview: The implementation for MovingAvg. Utilizes cppQueue by SMFSW
+ *                  for storing values, operates on float values. For more info,
+ *                  please visit https://github.com/SMFSW/Queue
+ *
+ *
+ **************************************************************/
 
 #include "MovingAvg.h"
+#include "def.h"
 
 /*
- * movingAvg constructor
- * Parameters: The number of values it averages over - how many it holds before
- *             it starts forgetting past values
- * Purpose: Creates an empty moving average class which averages over the given
- *          "window" if it holds that many values otherwise averages over the values
- *          it holds
- * Notes: Creates an EMPTY moving average which has no value defined (returns 0)
+ * MovingAvg constructor
+ * Parameters: None
+ * Purpose: Initializes a queue using the cppQueue library and sets the sum to zero
+ * Notes: None
  *
  */
-MovingAvg(unsigned moving_avg_window)
+MovingAvg::MovingAvg() : vals(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION, false)
 {
-    sum = 0;                      // If it's empty we'll call it a 0 average (0/0 = 0)
-    capacity = moving_avg_window; // Number of values to average over
-    cppQueue vals = cppQueue(sizeof(float), moving_avg_window, IMPLEMENTATION);
-    used = 0; // How many values are in the queue (before it's full)
+    sum = 0;
 }
 
-void take_new_measurement(float val)
+/*
+ * MovingAvg destructor
+ * Parameters: None
+ * Purpose: Cleans up mem of MovingAvg objects
+ * Notes: None
+ *
+ */
+MovingAvg::~MovingAvg()
 {
-    if (isFull())
+    // some instructions
+}
+
+/*
+ * init
+ * Parameters: An array of float values
+ * Purpose: Fills the cppQueue with QUEUE_MAX_LENGTH readings
+ * Notes: Must call this function before calling anything else of this class, you're
+ *          more likely to get undefined behavior this way
+ *
+ */
+MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH]) : vals(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION, false)
+{
+    sum = 0;
+    for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
     {
-        // Pop end of queue and subtract that number from sum
-        // Push val onto queue and add it to sum
+        vals.push(&(sensor_readings[i]));
+        sum += sensor_readings[i];
+    }
+}
+
+/*
+ * add_new_measurement
+ * Parameters: A float value
+ * Purpose: Adds a value to the queue and adjusts sum accordingly
+ * Notes: If the queue is full, the oldest value is popped to make space for
+ *          the new value. The sum is adjusted accordingly.
+ *
+ */
+void MovingAvg::add_new_measurement(float new_val)
+{
+    if (vals.isFull())
+    {
+        // Pop oldest value and adjust sum for new value being added
+        float popped_val;
+        vals.pop(&popped_val);
+        sum -= popped_val;
+        vals.push(&new_val);
+        sum += new_val;
     }
     else
     {
         // Push val onto queue and add it to the sum
-        // Increase used by 1
+        vals.push(&new_val);
+        sum += new_val;
     }
 }
 
-float get_average()
+/*
+ * get_average
+ * Parameters: None
+ * Purpose: Calculates the average of the values in the queue
+ * Notes: None
+ *
+ */
+float MovingAvg::get_average()
 {
-    return sum / (1.0 * capacity); // return average, making sure capacity is float to ensure float division
+    return sum / (1.0 * QUEUE_MAX_LENGTH);
 }

@@ -22,7 +22,7 @@
 #include "bb_setup.h"
 #include "def.h"
 #include "utility.h"
-#include "MovingAvg"
+#include "MovingAvg.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Defining sensor objects and structs
@@ -35,6 +35,8 @@ Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808(); // engine bay thermocou
 File launch_data;                                        // file object for writing data
 File error_data;                                         // file object for errors
 Adafruit_GPS GPS(&GPSSerial);                            // hardware GPS object
+MovingAvg moving_accel = MovingAvg();
+MovingAvg moving_altitude = MovingAvg();
 
 struct SensorData
 {
@@ -70,8 +72,13 @@ struct SensorData
 
 // Define state type and variable which defines mutually exclusive
 // flight states to inform what we're supposed
-typedef enum state = {POWER_ON = 0, LAUNCH_READY, POWERED_FLIGHT_PHASE,
-                      COAST_PHASE, APOGEE_PHASE, DROGUE_DEPLOYED,
+
+// we'll use this in a later launch
+// typedef enum state = {POWER_ON = 0, LAUNCH_READY, POWERED_FLIGHT_PHASE,
+//                       COAST_PHASE, APOGEE_PHASE, DROGUE_DEPLOYED,
+//                       MAIN_DEPLOY_ATTEMPT, MAIN_DEPLOYED, RECOVERY} state;
+
+typedef enum state = {POWER_ON = 0, LAUNCHING, APOGEE_PHASE, DROGUE_DEPLOYED,
                       MAIN_DEPLOY_ATTEMPT, MAIN_DEPLOYED, RECOVERY} state;
 
 // NOT TRANSMITTING MUCH FOR THESE GUYS
@@ -84,18 +91,9 @@ bool LAUNCH_READY = false;
 // TRANSITION FROM BURNOUT TO COAST PHASE IS WHEN JERK == 0 AND ACCEL IS NEGATIVE
 bool POWERED_FLIGHT_PHASE = false; // have a timer condition in addition to the accelertaio condition
 
-// we use a moving average implemented with queues to detect when to change states
-cppQueue velocity_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
-cppQueue accel_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
-cppQueue altitude_q(sizeof(float), QUEUE_MAX_LENGTH, IMPLEMENTATION);
-
-// a moving sum is also calculated to reduce time spent interating through
-//      each index in the array to get the average
-float curr_velocity_sum;
-float curr_accel_sum;
-float curr_altitude_sum;
-float curr_velocity_sum;
-float curr_velocity;
+float curr_accel;
+float curr_altitude;
+float max_altitude;
 
 unsigned int launch_start_time;
 unsigned int curr_time;
@@ -116,11 +114,33 @@ void stateDeterminer();
 void setup()
 {
     Serial.begin(115200); // serial used for testing
+    state = POWER_ON;
     bool imu_setup = setupSensorIMU(lsm);
     bool bmp_setup = setupSensorBMP(bmp);
     bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
     bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
     bool gps_setup = setupGPS(GPS);
+
+    // Creating an array of measurements to pass to the MovingAvg objects
+    // we will touch these sensor just this once
+    // outside of readSensors that is
+    float altitude_readings[QUEUE_MAX_LENGTH];
+    float accleration_readings[QUEUE_MAX_LENGTH];
+
+    for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
+    {
+        // read sensors
+        lsm.read();
+        sensors_event_t a, m, g, temp;
+        lsm.getEvent(&a, &m, &g, &temp);
+        bmp.performReading();
+
+        accleration_readings[i] = calculateAverageAcceleration(a.acceleration.x, a.acceleration.y, a.acceleration.z);
+        altitude_readings[i] = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+    }
+
+    moving_accel.init(accleration_readings);
+    moving_altitude.init(altitude_readings);
 
     // Switch the spi device before setting up the SD card module
     switchSPIDevice(SD_CS);
@@ -191,8 +211,8 @@ void loop()
  *              barometric pressure sensor object, and two temp sensor objects respectively
  * Purpose: Gets readings from sensors and put them into the aforementioned SensorData struct
  * Returns: Nothing
- * Notes: Pushes the current measurements of the velocity, acceleration, and altitude to their
- *          respective queue for moving average calculations
+ * Notes: Pushes the current measurements of the  acceleration and altitude to their
+ *          respective queue for moving average calculations. Also handles
  */
 void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
@@ -249,11 +269,12 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_z = g.gyro.z;
     sensor_data.curr_state = state;
 
-    // TODO: use Noah's movingAvg class to add new values to the queues
-    //          so change the syuff below
-    velocity_q.push(&sensor_data.altitude);
-    accel_q.push(&sensor_data.altitude);
-    altitude_q.push(&sensor_data.altitude);
+    // adding current measurments to our queue
+    moving_accel.add_new_measurement(&(calculateAverageAcceleration(a.acceleration.x, a.acceleration.y, a.acceleration.z)));
+    moving_altitude.add_new_measurement(&sensor_data.altitude);
+
+    // setting our variables to help track state
+    curr_altitude =
 }
 
 /*
@@ -347,7 +368,30 @@ void switchSPIDevice(int cs_pin)
  */
 void stateDeterminer()
 {
-    if (state = 0)
+    if (state == POWER_ON)
     {
+        if ((curr_accel > moving_accel.get_average()) && (curr_altitude > moving_altitude.get_average()))
+        {
+            state = LAUNCHING;
+            return;
+        }
+    }
+
+    if (state == LAUNCHING)
+    {
+        if (curr_altitude < max_altitude)
+        {
+            state = APOGEE_PHASE;
+            return;
+        }
+    }
+
+    if (state == APOGEE_PHASE)
+    {
+        if (curr_altitude < max_altitude)
+        {
+            state = LAUNCHING;
+            return;
+        }
     }
 }
