@@ -1,6 +1,6 @@
 /**************************************************************
  *
- *                     carm_computer_standard.ino
+ *                     carm_computer_launch1.ino
  *
  *     Author(s):  Daniel Opara, Kenny Chua
  *     Date:       1/6/2024
@@ -19,9 +19,9 @@
 #include "Adafruit_BMP3XX.h"  // BMP module
 #include "Adafruit_MCP9808.h" // Temp sensor module
 #include <Adafruit_GPS.h>     // GPS module
-#include "bb_setup.h"
+#include "utils.h"
 #include "def.h"
-#include "utility.h"
+#include "bb_setup.h"
 #include "MovingAvg.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -63,7 +63,6 @@ struct SensorData
     int gps_quality;
     int gps_num_satellites;
     int gps_antenna_status;
-    int curr_state;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -78,12 +77,19 @@ struct SensorData
 //                       COAST_PHASE, APOGEE_PHASE, DROGUE_DEPLOYED,
 //                       MAIN_DEPLOY_ATTEMPT, MAIN_DEPLOYED, RECOVERY} state;
 
-typedef enum state = {POWER_ON = 0, LAUNCHING, APOGEE_PHASE, DROGUE_DEPLOYED,
-                      MAIN_DEPLOY_ATTEMPT, MAIN_DEPLOYED, RECOVERY} state;
+typedef enum state
+{
+    POWER_ON = 0,
+    LAUNCHING,
+    APOGEE_PHASE,
+    DROGUE_DEPLOYED,
+    MAIN_DEPLOY_ATTEMPT,
+    MAIN_DEPLOYED,
+    RECOVERY
+} state;
 
 // NOT TRANSMITTING MUCH FOR THESE GUYS
 // RECIEVING POWER
-bool POWER_ON = true;
 // SENSOR VALUES HAVE STABILIZED
 bool LAUNCH_READY = false;
 // WE ARE ACTUALLY TRANSMITTING HERE
@@ -96,7 +102,7 @@ float curr_altitude;
 float max_altitude;
 
 unsigned int launch_start_time;
-
+state rocket_state;
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -112,7 +118,7 @@ void stateDeterminer();
 void setup()
 {
     Serial.begin(115200); // serial used for testing
-    state = POWER_ON;
+    rocket_state = POWER_ON;
     pinMode(J1, OUTPUT);
     pinMode(J2, OUTPUT);
     bool imu_setup = setupSensorIMU(lsm);
@@ -139,61 +145,64 @@ void setup()
         altitude_readings[i] = bmp.readAltitude(SEALEVELPRESSURE_HPA);
     }
 
-    moving_accel.init(accleration_readings);
-    moving_altitude.init(altitude_readings);
+    moving_accel.fill_queue(accleration_readings, 5);
+    moving_altitude.fill_queue(altitude_readings, 5);
 
-    // Switch the spi device before setting up the SD card module
+    // Switch the spi device to listen to before setting up the SD card module
     switchSPIDevice(SD_CS);
-    bool sd_setup = setupSD(CHIPSELECT);
+    // if this is false, then ig this whole thing doesnt matter
+    bool sd_setup = setupSD();
     // TODO: Add a case where the SD card module setup func returns false
     File init_data = SD.open("init.txt", FILE_WRITE);
     if (init_data)
     {
-        if (imu_setup)
-        {
-            init_data.println("IMU successfully set up");
-        }
-        else
-        {
-            init_data.println("IMU unsuccessfully set up");
-        }
-
-        if (bmp_setup)
-        {
-            init_data.println("BMP successfully set up");
-        }
-        else
-        {
-            init_data.println("BMP unsuccessfully set up");
-        }
-
-        if (temp_setup1)
-        {
-            init_data.println("Avionics bay temp. sensor successfully set up");
-        }
-        else
-        {
-            init_data.println("Avionics bay temp. sensor unsuccessfully set up");
-        }
-
-        if (temp_setup2)
-        {
-            init_data.println("Engine bay temp. sensor successfully set up");
-        }
-        else
-        {
-            init_data.println("Engine bay temp. sensor unsuccessfully set up");
-        }
-        if (gps_setup)
-        {
-            init_data.println("GPS module successfully set up");
-        }
-        else
-        {
-            init_data.println("GPS module unsuccessfully set up");
-        }
+        (imu_setup) ? (init_data.println("IMU successfully set up")) : (init_data.println("IMU unsuccessfully set up"));
+        (bmp_setup) ? (init_data.println("BMP successfully set up")) : (init_data.println("BMP unsuccessfully set up"));
+        (temp_setup1) ? (init_data.println("Avionics bay temp. successfully set up")) : (init_data.println("Avionics bay temp. unsuccessfully set up"));
+        (temp_setup2) ? (init_data.println("Engine bay temp. successfully set up")) : (init_data.println("Engine bay temp. unsuccessfully set up"));
+        (gps_setup) ? (init_data.println("GPS successfully set up")) : (init_data.println("GPS unsuccessfully set up"));
 
         init_data.close();
+    }
+    launch_data = SD.open("datalog.csv", FILE_WRITE);
+    if (launch_data)
+    {
+        launch_data.print("STATE");
+        launch_data.print(",");
+        launch_data.print("time (ms)");
+        launch_data.print(",");
+        launch_data.print("av bay temperature (C)"); // in Celcius
+        launch_data.print(",");
+        launch_data.print("eng bay temperature (C)"); // in Celcius
+        launch_data.print(",");
+        launch_data.print("temp from altimeter (C)"); // in Celcius
+        launch_data.print(",");
+        launch_data.print("air pressure (kPa)"); // in kiloPascals
+        launch_data.print(",");
+        launch_data.print("altitude (m)"); // in meters
+        launch_data.print(",");
+        launch_data.print("partial moving avg altitude (m)"); // in meters
+        launch_data.print(",");
+        launch_data.print("moving avg altitude (m)"); // in meters
+        launch_data.print(",");
+        launch_data.print("x acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print(",");
+        launch_data.print("y acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print(",");
+        launch_data.print("z acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print(",");
+        launch_data.print("x magnetic force (gauss)"); // in gauss
+        launch_data.print(",");
+        launch_data.print("y magnetic force (gauss)"); // in gauss
+        launch_data.print(",");
+        launch_data.print("z magnetic force (gauss)"); // in gauss
+        launch_data.print(",");
+        launch_data.print("x gyro (dps)"); // in degrees per sec
+        launch_data.print(",");
+        launch_data.print("y gyro (dps)"); // in degrees per sec
+        launch_data.print(",");
+        launch_data.println("y gyro (dps)"); // in degrees per sec
+        launch_data.close();
     }
 }
 
@@ -201,7 +210,7 @@ void loop()
 {
     SensorData data = {0};
     stateDeterminer();
-    readSensors(data, lsm, bmp, tempsensor_avbay, tempsensor_engbay);
+    readSensors(data, lsm, bmp, tempsensor_avbay, tempsensor_engbay, GPS);
     storeSensorData(data);
 }
 
@@ -245,7 +254,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
             // bc we can fail to parse a sentence, we only bother adding gps data if we get new data and
             // successfully parse it, otherwise, we just wait for another sentence
             sensor_data.gps_fix = gps_obj.fix;
-            sensor_data.gps_quality = gps_obj.quality;
+            sensor_data.gps_quality = gps_obj.fixquality;
             sensor_data.gps_num_satellites = gps_obj.satellites;
             sensor_data.gps_antenna_status = gps_obj.antenna;
         }
@@ -264,14 +273,17 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_x = g.gyro.x;
     sensor_data.gyro_y = g.gyro.y;
     sensor_data.gyro_z = g.gyro.z;
-    sensor_data.curr_state = state;
 
     // adding current measurments to our queue
-    moving_accel.add_new_measurement(&(calculateAverageAcceleration(a.acceleration.x, a.acceleration.y, a.acceleration.z)));
-    moving_altitude.add_new_measurement(&sensor_data.altitude);
+    moving_accel.add_new_measurement((calculateAverageAcceleration(a.acceleration.x, a.acceleration.y, a.acceleration.z)));
+    moving_altitude.add_new_measurement(sensor_data.altitude);
 
     // setting our variables to help track state
-    curr_altitude =
+    curr_altitude = moving_altitude.get_partial_average();
+    if (curr_altitude > max_altitude)
+    {
+        max_altitude = curr_altitude;
+    }
 }
 
 /*
@@ -287,37 +299,41 @@ void storeSensorData(SensorData &sensor_data)
     launch_data = SD.open("datalog.csv", FILE_WRITE);
     if (launch_data)
     {
-        launch_data.print(sensor_data.curr_state);
+        launch_data.print(rocket_state);
         launch_data.print(",");
         launch_data.print(sensor_data.time);
         launch_data.print(",");
-        launch_data.print(sensor_data.temperature_avbay);
+        launch_data.print(sensor_data.temperature_avbay); // in Celcius
         launch_data.print(",");
-        launch_data.print(sensor_data.temperature_engbay);
+        launch_data.print(sensor_data.temperature_engbay); // in Celcius
         launch_data.print(",");
-        launch_data.print(sensor_data.altimeter_temp);
+        launch_data.print(sensor_data.altimeter_temp); // in Celcius
         launch_data.print(",");
-        launch_data.print(sensor_data.pressure);
+        launch_data.print(sensor_data.pressure); // in kiloPascals
         launch_data.print(",");
-        launch_data.print(sensor_data.altitude);
+        launch_data.print(sensor_data.altitude); // in meters
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_x);
+        launch_data.print(curr_altitude); // in meters
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_y);
+        launch_data.print(moving_altitude.get_average()); // in meters
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_z);
+        launch_data.print(sensor_data.accel_x); // in meters per sec^2
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_x);
+        launch_data.print(sensor_data.accel_y); // in meters per sec^2
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_y);
+        launch_data.print(sensor_data.accel_z); // in meters per sec^2
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_z);
+        launch_data.print(sensor_data.mag_x); // in gauss
         launch_data.print(",");
-        launch_data.print(sensor_data.gyro_x);
+        launch_data.print(sensor_data.mag_y); // in gauss
         launch_data.print(",");
-        launch_data.print(sensor_data.gyro_y);
+        launch_data.print(sensor_data.mag_z); // in gauss
         launch_data.print(",");
-        launch_data.println(sensor_data.gyro_z);
+        launch_data.print(sensor_data.gyro_x); // in degrees per sec
+        launch_data.print(",");
+        launch_data.print(sensor_data.gyro_y); // in degrees per sec
+        launch_data.print(",");
+        launch_data.println(sensor_data.gyro_z); // in degrees per sec
         launch_data.close();
     }
     else
@@ -362,39 +378,57 @@ void switchSPIDevice(int cs_pin)
  * Parameters: None
  * Purpose: Switches the state the rocket is in based on
  * Returns: Nothing
- * Notes: The Feather can only "talk" to one device at a time so we much switch
- *          the CS pin that is being listened to before using the respective device
+ * Notes: None
  */
 void stateDeterminer()
 {
-    if (state == POWER_ON)
+    if (rocket_state == POWER_ON)
     {
         if ((curr_accel > moving_accel.get_average()) && (curr_altitude > moving_altitude.get_average()))
         {
             launch_start_time = millis();
-            state = LAUNCHING;
+            rocket_state = LAUNCHING;
             return;
         }
     }
 
-    if (state == LAUNCHING)
+    if (rocket_state == LAUNCHING)
     {
         if (curr_altitude < max_altitude)
         {
-            state = APOGEE_PHASE;
+            rocket_state = APOGEE_PHASE;
             return;
         }
     }
 
-    if (state == APOGEE_PHASE)
+    if (rocket_state == APOGEE_PHASE)
     {
-        if (curr_altitude < max_altitude)
+        if (curr_altitude < 700.0)
         {
-            // TODO: Figure out which of the ejection charge pins should be set to HIGH
-            digitalWrite(J1, HIGH);
-            delay(500);
-            digitalWrite(J1, LOW);
-            return;
+            rocket_state = MAIN_DEPLOY_ATTEMPT;
         }
+        if (!(moving_accel.get_partial_average() > 5.0))
+        {
+            rocket_state = DROGUE_DEPLOYED;
+        }
+        return;
+    }
+
+    if (rocket_state == MAIN_DEPLOY_ATTEMPT)
+    {
+        if (moving_accel.get_partial_average() > 1)
+        {
+            rocket_state = MAIN_DEPLOYED;
+        }
+        return;
+    }
+
+    if (rocket_state == MAIN_DEPLOYED)
+    {
+        if (curr_altitude < 30.0)
+        {
+            rocket_state = RECOVERY;
+        }
+        return;
     }
 }

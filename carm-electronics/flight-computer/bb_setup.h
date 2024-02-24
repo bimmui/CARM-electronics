@@ -117,11 +117,11 @@ bool setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
  * Notes: Documentation on the module can be found here
  *          https://learn.adafruit.com/adafruit-micro-sd-breakout-board-card-tutorial/introduction
  */
-bool setupSD(int chipnum)
+bool setupSD()
 {
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
     {
-        if (!SD.begin(chipnum))
+        if (!SD.begin(SD_CS))
         {
             delay(2000);
         }
@@ -146,8 +146,8 @@ bool setupSD(int chipnum)
  */
 bool setupGPS(Adafruit_GPS &gps_obj)
 {
-    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-    GPS.sendCommand(PGCMD_ANTENNA);
+    gps_obj.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+    gps_obj.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+    gps_obj.sendCommand(PGCMD_ANTENNA);
     return true;
 }
