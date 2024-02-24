@@ -51,7 +51,7 @@ MovingAvg::~MovingAvg()
  *          more likely to get undefined behavior this way
  *
  */
-MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count)
+void MovingAvg::fill_queue(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count)
 {
     sum = 0;
     for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
@@ -59,11 +59,13 @@ MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count)
         vals.push(&(sensor_readings[i]));
         sum += sensor_readings[i];
     }
-    for (int i = 0; i < partial_sum_count; i++)
+
+    // take the last partial_sum_count readings, these are the most recent readings
+    for (int i = QUEUE_MAX_LENGTH - 1; i > (QUEUE_MAX_LENGTH - 1 - partial_sum_count); i--)
     {
         partial_sum += sensor_readings[i];
     }
-    partial_sum_nums = partial_sum_count
+    partial_sum_nums = partial_sum_count;
 }
 
 /*
@@ -76,21 +78,24 @@ MovingAvg::init(float sensor_readings[QUEUE_MAX_LENGTH], int partial_sum_count)
  */
 void MovingAvg::add_new_measurement(float new_val)
 {
+    // handling the partial sum
+    if (vals.getCount() >= 5)
+    {
+        float to_subtract;
+        vals.peekIdx(&to_subtract, QUEUE_MAX_LENGTH - partial_sum_nums);
+        partial_sum -= to_subtract;
+    }
+
     if (vals.isFull())
     {
         // Pop oldest value and adjust sum for new value being added
         float popped_val;
         vals.pop(&popped_val);
         sum -= popped_val;
-        vals.push(&new_val);
-        sum += new_val;
     }
-    else
-    {
-        // Push val onto queue and add it to the sum
-        vals.push(&new_val);
-        sum += new_val;
-    }
+    vals.push(&new_val);
+    sum += new_val;
+    partial_sum += new_val;
 }
 
 /*
@@ -114,5 +119,5 @@ float MovingAvg::get_average()
  */
 float MovingAvg::get_partial_average()
 {
-    return sum / (1.0 * QUEUE_MAX_LENGTH);
+    return partial_sum / (1.0 * partial_sum_nums);
 }

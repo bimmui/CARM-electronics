@@ -59,9 +59,9 @@ float calculateAverageAcceleration(float x_accel, float y_accel, float z_accel)
  * Returns: Nothing
  * Notes:
  */
-float calculateCurrVelocity(float prev_velocity, float y_accel, float z_accel)
-{
-}
+// float calculateCurrVelocity(float prev_velocity, float y_accel, float z_accel)
+// {
+// }
 
 /*
  * calculateAverageAcceleration
@@ -72,13 +72,13 @@ float calculateCurrVelocity(float prev_velocity, float y_accel, float z_accel)
  * Notes: The queues need to be filled up to prevent any undefined behavior when doing
  *              calculations with empty indicies
  */
-void setupMovingAvgArrs(cppQueue velocity_arr, cppQueue altitude_arr, cppQueue accel_arr,
-                        Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj, )
-{
-    // Take QUEUE_MAX_LENGTH readings from each sensor and store in their
-    // moving average queues
-    for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
-    {
-        //
-    }
-}
+// void setupMovingAvgArrs(cppQueue velocity_arr, cppQueue altitude_arr, cppQueue accel_arr,
+//                         Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj, )
+// {
+//     // Take QUEUE_MAX_LENGTH readings from each sensor and store in their
+//     // moving average queues
+//     for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
+//     {
+//         //
+//     }
+// }
