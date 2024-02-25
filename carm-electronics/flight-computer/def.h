@@ -26,6 +26,7 @@
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define SD_CS 13
 #define GPSSerial Serial1
+#define GPSECHO false
 // queue constants
 #define IMPLEMENTATION FIFO
 #define QUEUE_MAX_LENGTH 20
