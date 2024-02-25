@@ -59,10 +59,12 @@ struct SensorData
     float gps_long;
     float gps_speed;
     float gps_angle;
+    float gps_altitude;
     int gps_fix;
     int gps_quality;
     int gps_num_satellites;
     int gps_antenna_status;
+    int curr_state;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -110,6 +112,43 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
                  Adafruit_BMP3XX &bmp_obj, Adafruit_MCP9808 &tempsensor_obj1,
                  Adafruit_MCP9808 &tempsensor_obj2, Adafruit_GPS &gps_obj);
 void storeSensorData(SensorData &sensor_data);
+void readGPS(SensorData &sensor_data)
+{
+    // gps reading
+    GPS.read();
+    if (GPS.newNMEAreceived())
+    {
+        if (!GPS.parse(GPS.lastNMEA()))
+        { // this also sets the newNMEAreceived() flag to false
+            return;
+        }
+    }
+    if (GPS.fix)
+    {
+        sensor_data.gps_fix = GPS.fix;
+        sensor_data.gps_quality = GPS.fixquality;
+        sensor_data.gps_num_satellites = (int)GPS.satellites;
+        sensor_data.gps_antenna_status = (int)GPS.antenna;
+        sensor_data.gps_lat = convertToDecimalDegrees(GPS.latitude, GPS.lat);
+        sensor_data.gps_long = convertToDecimalDegrees(GPS.longitude, GPS.lon);
+        sensor_data.gps_speed = GPS.speed;
+        sensor_data.gps_angle = GPS.angle;
+        sensor_data.gps_altitude = GPS.altitude;
+    }
+    else
+    {
+        sensor_data.gps_fix = GPS.fix;
+        sensor_data.gps_quality = 1;
+        sensor_data.gps_num_satellites = 1;
+        sensor_data.gps_antenna_status = 1;
+        sensor_data.gps_lat = 1;
+        sensor_data.gps_long = 1;
+        sensor_data.gps_speed = 1;
+        sensor_data.gps_angle = 1;
+        sensor_data.gps_altitude = 1;
+    }
+}
+
 // TODO: Complete this function. Also test if constantly
 //         switching devices is a thing that can be done
 void switchSPIDevice(int cs_pin);
@@ -117,15 +156,17 @@ void stateDeterminer();
 
 void setup()
 {
-    Serial.begin(115200); // serial used for testing
     rocket_state = POWER_ON;
-    pinMode(J1, OUTPUT);
-    pinMode(J2, OUTPUT);
+    // pinMode(J1, OUTPUT);
+    // pinMode(J2, OUTPUT);
     bool imu_setup = setupSensorIMU(lsm);
     bool bmp_setup = setupSensorBMP(bmp);
     bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
     bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
-    bool gps_setup = setupGPS(GPS);
+    GPS.begin(9600);
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
+    GPS.sendCommand(PGCMD_ANTENNA);
 
     // Creating an array of measurements to pass to the MovingAvg objects
     // we will touch these sensor just this once
@@ -148,9 +189,8 @@ void setup()
     moving_accel.fill_queue(accleration_readings, 5);
     moving_altitude.fill_queue(altitude_readings, 5);
 
-    // Switch the spi device to listen to before setting up the SD card module
+    // Switch the spi device before setting up the SD card module
     switchSPIDevice(SD_CS);
-    // if this is false, then ig this whole thing doesnt matter
     bool sd_setup = setupSD();
     // TODO: Add a case where the SD card module setup func returns false
     File init_data = SD.open("init.txt", FILE_WRITE);
@@ -158,10 +198,9 @@ void setup()
     {
         (imu_setup) ? (init_data.println("IMU successfully set up")) : (init_data.println("IMU unsuccessfully set up"));
         (bmp_setup) ? (init_data.println("BMP successfully set up")) : (init_data.println("BMP unsuccessfully set up"));
-        (temp_setup1) ? (init_data.println("Avionics bay temp. successfully set up")) : (init_data.println("Avionics bay temp. unsuccessfully set up"));
-        (temp_setup2) ? (init_data.println("Engine bay temp. successfully set up")) : (init_data.println("Engine bay temp. unsuccessfully set up"));
-        (gps_setup) ? (init_data.println("GPS successfully set up")) : (init_data.println("GPS unsuccessfully set up"));
-
+        (temp_setup1) ? (init_data.println("External temp. successfully set up")) : (init_data.println("External temp. unsuccessfully set up"));
+        (temp_setup2) ? (init_data.println("Avionics bay temp. successfully set up")) : (init_data.println("Avionics bay temp. unsuccessfully set up"));
+        init_data.println("----------------------------------------------------------------------------");
         init_data.close();
     }
     launch_data = SD.open("datalog.csv", FILE_WRITE);
@@ -171,9 +210,9 @@ void setup()
         launch_data.print(",");
         launch_data.print("time (ms)");
         launch_data.print(",");
-        launch_data.print("av bay temperature (C)"); // in Celcius
+        launch_data.print("external temperature (C)"); // in Celcius
         launch_data.print(",");
-        launch_data.print("eng bay temperature (C)"); // in Celcius
+        launch_data.print("av bay temperature (C)"); // in Celcius
         launch_data.print(",");
         launch_data.print("temp from altimeter (C)"); // in Celcius
         launch_data.print(",");
@@ -184,6 +223,10 @@ void setup()
         launch_data.print("partial moving avg altitude (m)"); // in meters
         launch_data.print(",");
         launch_data.print("moving avg altitude (m)"); // in meters
+        launch_data.print(",");
+        launch_data.print("partial moving avg accel (m/s^2)"); // in meters
+        launch_data.print(",");
+        launch_data.print("moving avg acceleration (m/s^2)"); // in meters per sec^2
         launch_data.print(",");
         launch_data.print("x acceleration (m/s^2)"); // in meters per sec^2
         launch_data.print(",");
@@ -201,7 +244,25 @@ void setup()
         launch_data.print(",");
         launch_data.print("y gyro (dps)"); // in degrees per sec
         launch_data.print(",");
-        launch_data.println("y gyro (dps)"); // in degrees per sec
+        launch_data.print("z gyro (dps)"); // in degrees per sec
+        launch_data.print(",");
+        launch_data.print("gps lat");
+        launch_data.print(",");
+        launch_data.print("gps long");
+        launch_data.print(",");
+        launch_data.print("gps speed");
+        launch_data.print(",");
+        launch_data.print("gps angle");
+        launch_data.print(",");
+        launch_data.print("gps altitude");
+        launch_data.print(",");
+        launch_data.print("gps fix");
+        launch_data.print(",");
+        launch_data.print("gps fix quality");
+        launch_data.print(",");
+        launch_data.print("gps satellites");
+        launch_data.print(",");
+        launch_data.println("gps antenna");
         launch_data.close();
     }
 }
@@ -245,23 +306,17 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
         sensor_data.altitude = bmp_obj.readAltitude(SEALEVELPRESSURE_HPA);
     }
 
-    // gps reading
-    GPS.read();
-    if (GPS.newNMEAreceived())
-    {
-        if (GPS.parse(GPS.lastNMEA()))
-        {
-            // bc we can fail to parse a sentence, we only bother adding gps data if we get new data and
-            // successfully parse it, otherwise, we just wait for another sentence
-            sensor_data.gps_fix = gps_obj.fix;
-            sensor_data.gps_quality = gps_obj.fixquality;
-            sensor_data.gps_num_satellites = gps_obj.satellites;
-            sensor_data.gps_antenna_status = gps_obj.antenna;
-        }
-    }
+    readGPS(sensor_data);
 
     // store the sensor readings in the struct
-    sensor_data.time = millis() - launch_start_time;
+    if (rocket_state == POWER_ON)
+    {
+        sensor_data.time = 0;
+    }
+    else
+    {
+        sensor_data.time = millis() - launch_start_time;
+    }
     sensor_data.temperature_avbay = tempsensor_obj1.readTempC();
     sensor_data.temperature_engbay = tempsensor_obj2.readTempC();
     sensor_data.accel_x = a.acceleration.x;
@@ -273,6 +328,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
     sensor_data.gyro_x = g.gyro.x;
     sensor_data.gyro_y = g.gyro.y;
     sensor_data.gyro_z = g.gyro.z;
+    sensor_data.curr_state = rocket_state;
 
     // adding current measurments to our queue
     moving_accel.add_new_measurement((calculateAverageAcceleration(a.acceleration.x, a.acceleration.y, a.acceleration.z)));
@@ -280,6 +336,7 @@ void readSensors(SensorData &sensor_data, Adafruit_LSM9DS1 &lsm_obj,
 
     // setting our variables to help track state
     curr_altitude = moving_altitude.get_partial_average();
+    curr_accel = moving_accel.get_partial_average();
     if (curr_altitude > max_altitude)
     {
         max_altitude = curr_altitude;
@@ -299,41 +356,63 @@ void storeSensorData(SensorData &sensor_data)
     launch_data = SD.open("datalog.csv", FILE_WRITE);
     if (launch_data)
     {
-        launch_data.print(rocket_state);
+        launch_data.print(sensor_data.curr_state);
         launch_data.print(",");
         launch_data.print(sensor_data.time);
         launch_data.print(",");
-        launch_data.print(sensor_data.temperature_avbay); // in Celcius
+        launch_data.print(sensor_data.temperature_avbay);
         launch_data.print(",");
-        launch_data.print(sensor_data.temperature_engbay); // in Celcius
+        launch_data.print(sensor_data.temperature_engbay);
         launch_data.print(",");
-        launch_data.print(sensor_data.altimeter_temp); // in Celcius
+        launch_data.print(sensor_data.altimeter_temp);
         launch_data.print(",");
-        launch_data.print(sensor_data.pressure); // in kiloPascals
+        launch_data.print(sensor_data.pressure);
         launch_data.print(",");
-        launch_data.print(sensor_data.altitude); // in meters
+        launch_data.print(sensor_data.altitude);
         launch_data.print(",");
-        launch_data.print(curr_altitude); // in meters
+        launch_data.print(curr_altitude);
         launch_data.print(",");
-        launch_data.print(moving_altitude.get_average()); // in meters
+        launch_data.print(moving_altitude.get_average());
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_x); // in meters per sec^2
+        launch_data.print(curr_accel);
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_y); // in meters per sec^2
+        launch_data.print(moving_accel.get_average());
         launch_data.print(",");
-        launch_data.print(sensor_data.accel_z); // in meters per sec^2
+        launch_data.print(sensor_data.accel_x);
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_x); // in gauss
+        launch_data.print(sensor_data.accel_y);
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_y); // in gauss
+        launch_data.print(sensor_data.accel_z);
         launch_data.print(",");
-        launch_data.print(sensor_data.mag_z); // in gauss
+        launch_data.print(sensor_data.mag_x);
         launch_data.print(",");
-        launch_data.print(sensor_data.gyro_x); // in degrees per sec
+        launch_data.print(sensor_data.mag_y);
         launch_data.print(",");
-        launch_data.print(sensor_data.gyro_y); // in degrees per sec
+        launch_data.print(sensor_data.mag_z);
         launch_data.print(",");
-        launch_data.println(sensor_data.gyro_z); // in degrees per sec
+        launch_data.print(sensor_data.gyro_x);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gyro_y);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gyro_z);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_lat);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_long);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_speed);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_angle);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_altitude);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_fix);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_quality);
+        launch_data.print(",");
+        launch_data.print(sensor_data.gps_num_satellites);
+        launch_data.print(",");
+        launch_data.println(sensor_data.gps_antenna_status);
         launch_data.close();
     }
     else
@@ -388,8 +467,8 @@ void stateDeterminer()
         {
             launch_start_time = millis();
             rocket_state = LAUNCHING;
-            return;
         }
+        return;
     }
 
     if (rocket_state == LAUNCHING)
@@ -397,8 +476,8 @@ void stateDeterminer()
         if (curr_altitude < max_altitude)
         {
             rocket_state = APOGEE_PHASE;
-            return;
         }
+        return;
     }
 
     if (rocket_state == APOGEE_PHASE)
