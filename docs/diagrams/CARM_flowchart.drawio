@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-01-06T17:34:24.673Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" etag="yFOpOkg6BYN-RgNBKZGq" version="22.1.16" type="device">
+<mxfile host="app.diagrams.net" modified="2024-03-13T04:23:52.694Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="KdhteF-4K7_zFDCol_96" version="23.1.4" type="device">
   <diagram name="Page-1" id="ctp3w-21IuXqPw1LssGX">
-    <mxGraphModel dx="711" dy="387" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1038" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -59,7 +59,7 @@
             <mxPoint x="618.1268731268732" y="432.14285714285717" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="IH2Ev61ElLuh_EWIL5z0-27" value="Influx DB" style="whiteSpace=wrap;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+        <mxCell id="IH2Ev61ElLuh_EWIL5z0-27" value="Database" style="whiteSpace=wrap;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="674.7102897102897" y="361.42857142857144" width="76.72327672327674" height="64.28571428571429" as="geometry" />
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-31" value="Software Architecture" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=4" parent="1" vertex="1">
@@ -77,8 +77,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="IH2Ev61ElLuh_EWIL5z0-36" value="External Temperature Sensor" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
-          <mxGeometry x="90.71428571428572" y="395.2631578947369" width="68.57142857142858" height="52.10526315789475" as="geometry" />
+        <mxCell id="IH2Ev61ElLuh_EWIL5z0-36" value="External Temperature Sensor" style="whiteSpace=wrap;strokeWidth=2;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="70.00428571428571" y="350.0031578947369" width="68.57142857142858" height="52.10526315789475" as="geometry" />
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IH2Ev61ElLuh_EWIL5z0-37" target="2" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -89,7 +89,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-37" value="Inertial Measurement Unit " style="whiteSpace=wrap;strokeWidth=2;fontSize=10;" parent="1" vertex="1">
-          <mxGeometry x="90.71428571428572" y="222.70947368421054" width="68.57142857142858" height="51.43263157894738" as="geometry" />
+          <mxGeometry x="70.00428571428571" y="222.70947368421054" width="68.57142857142858" height="51.43263157894738" as="geometry" />
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-39" value="&lt;font style=&quot;font-size: 5px;&quot;&gt;Serial Connection&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=5;" parent="1" vertex="1">
           <mxGeometry x="495.00285714285724" y="325.15789473684214" width="60" height="20" as="geometry" />
@@ -97,22 +97,41 @@
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IH2Ev61ElLuh_EWIL5z0-41" target="2" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="IH2Ev61ElLuh_EWIL5z0-41" value="Barometric Pressure + Internal Temperature Sensor" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
-          <mxGeometry x="116.42857142857144" y="290.38000000000005" width="85.71428571428572" height="77.81684210526318" as="geometry" />
+        <mxCell id="IH2Ev61ElLuh_EWIL5z0-41" value="Barometric Pressure" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="70" y="289.15000000000003" width="73.57" height="49.62" as="geometry" />
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="IH2Ev61ElLuh_EWIL5z0-42" target="2" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="219.28571428571433" y="395.2631578947369" />
-              <mxPoint x="219.28571428571433" y="328.9473684210527" />
+              <mxPoint x="109" y="430" />
+              <mxPoint x="219" y="430" />
+              <mxPoint x="219" y="329" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-42" value="GPS Module" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
-          <mxGeometry x="176.42857142857144" y="395.2631578947369" width="68.57142857142858" height="52.10526315789475" as="geometry" />
+          <mxGeometry x="74.99857142857145" y="412.1831578947369" width="68.57142857142858" height="52.10526315789475" as="geometry" />
         </mxCell>
         <mxCell id="IH2Ev61ElLuh_EWIL5z0-48" value="&lt;b&gt;C.A.R.M Rocket Computer&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="108.5021078921078" y="186.84210526315792" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2mTkICIFIjP5WaNCC0QK-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="2mTkICIFIjP5WaNCC0QK-8" target="2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="278" y="293" />
+              <mxPoint x="220" y="293" />
+              <mxPoint x="220" y="329" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2mTkICIFIjP5WaNCC0QK-8" value="Internal Temperature Sensor" style="whiteSpace=wrap;strokeWidth=2;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="241.1" y="223.62" width="73.57" height="49.62" as="geometry" />
+        </mxCell>
+        <mxCell id="2mTkICIFIjP5WaNCC0QK-10" value="SD Card" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="241.09857142857146" y="412.1831578947369" width="68.57142857142858" height="52.10526315789475" as="geometry" />
+        </mxCell>
+        <mxCell id="2mTkICIFIjP5WaNCC0QK-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.572;entryY=0.007;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="2" target="2mTkICIFIjP5WaNCC0QK-10">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
