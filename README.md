@@ -46,3 +46,4 @@ conda list
 - `Adafruit GPS` (ver 1.7.4)
 - `SD` (ver 1.2.4)
 - `Queue` (ver 1.11)
+- `RadioHead` (ver 1.122.1) 
