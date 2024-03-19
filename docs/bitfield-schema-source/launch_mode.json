@@ -25,10 +25,10 @@
         {"name": "INT TEMP AVBAY", "bits": 11, "type": 2},
         {"name": "INT TEMP ENGINE", "bits": 11, "type": 2},
         {"name": "ACCEL Z", "bits": 11, "type": 6},
-        {"name": "MAG X", "bits": 11, "type": 3},
-        {"name": "MAG Y", "bits": 11, "type": 3},
+        {"name": "MAG X", "bits": 11, "type": 15},
+        {"name": "MAG Y", "bits": 11, "type": 15},
 
-        {"name": "MAG Z", "bits": 11, "type": 3},
+        {"name": "MAG Z", "bits": 11, "type": 15},
         {"name": "FAILF", "bits": 10, "type": 8},
         {"name": "GPS SP", "bits": 10, "type": 11},
         {"name": "VELO", "bits": 15, "type": 9},
