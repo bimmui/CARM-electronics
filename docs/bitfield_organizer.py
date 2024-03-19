@@ -8,29 +8,55 @@ length of your bitfields. This was used to determine the bitfield schema generat
 bitfield_generator.py.
 """
 
-# Change these values to reflect your project!
-HEADER_FIELD = 8
-WORD_SIZE = 32
+# Change these values to reflect the number of bits for your project!
+
+# you could use the header field to include the bits that will be included in every fragment you transmit
+# the rfm96 can handle package up to 252 bytes so we can transmit all we need in one go
+# you might just end up playing around with this to get something you want
+HEADER_FIELD = 0
+WORD_SIZE = 64
 
 
-def distribute_bitfields(bitfields, max_value_per_bucket, swap_indices=None):
+def distribute_bitfields(bitfields, max_value_per_bucket, swap_indices=None, insert_indices=None, swap_first=False):
     # sort bit field values in descending order
     sorted_bitfields = sorted(bitfields, key=lambda x: x[1], reverse=True)
     before_swaps = deepcopy(sorted_bitfields)
 
     # sometimes descending order isnt the best way to iterating through the array
-    # and organize bit, we can swap indicies if we want to add some field in a
-    # bucket in a particular order
-    if swap_indices:
-        for swap_index1, swap_index2 in swap_indices:
-            sorted_bitfields[swap_index1], sorted_bitfields[swap_index2] = (
-                sorted_bitfields[swap_index2],
-                sorted_bitfields[swap_index1],
-            )
+    # and organize bit, we can swap/insert indicies if we want to add fields in
+    # buckets in a particular order
 
-    print("Before Sorting\t\t\t\t\tAfter Sorting")
-    for before, after in zip(before_swaps, sorted_bitfields):
-        print(f"{before}\t\t\t\t\t{after}")
+    # recommended to use these whenever you can because descending order can be a
+    # bitch to deal with when it comes to this shit
+
+    if swap_first:
+        if swap_indices:
+            for swap_index1, swap_index2 in swap_indices:
+                sorted_bitfields[swap_index1], sorted_bitfields[swap_index2] = (
+                    sorted_bitfields[swap_index2],
+                    sorted_bitfields[swap_index1],
+                )
+        if insert_indices:
+            for insert_elem, insert_idx in insert_indices:
+                elem_to_insert = sorted_bitfields[insert_elem]
+                sorted_bitfields.pop(insert_elem)
+                sorted_bitfields.insert(insert_idx, elem_to_insert)
+    else:
+        if insert_indices:
+            for insert_elem, insert_idx in insert_indices:
+                elem_to_insert = sorted_bitfields[insert_elem]
+                sorted_bitfields.pop(insert_elem)
+                sorted_bitfields.insert(insert_idx, elem_to_insert)
+        if swap_indices:
+            for swap_index1, swap_index2 in swap_indices:
+                sorted_bitfields[swap_index1], sorted_bitfields[swap_index2] = (
+                    sorted_bitfields[swap_index2],
+                    sorted_bitfields[swap_index1],
+                )
+
+    print("After Sorting\t\t\t\t\t\tAfter Swaps and Inserts")
+    for i, (before, after) in enumerate(zip(before_swaps, sorted_bitfields)):
+        print(f"{i}: {before}\t\t\t\t\t\t{after}")
 
     # initialize a single word with the value of the header field
     buckets = [[HEADER_FIELD]]
@@ -85,32 +111,49 @@ def distribute_bitfields(bitfields, max_value_per_bucket, swap_indices=None):
 # list of bitfields and their values, replace with your bitfields as needed
 bitfield_list = [
     ("gps coord: lat", 28),
-    ("num satellites", 3),
-    ("external temp", 14),
-    ("internal temp: avbay", 12),
-    ("internal temp: engine bay", 12),
-    ("velocity", 9),
-    ("altitude", 17),
-    ("accel x", 14),
-    ("accel y", 14),
-    ("accel z", 14),
-    ("gyro x", 23),
-    ("gyro y", 23),
-    ("gyro z", 16),
-    ("mag x", 11),
+    ("gps fix", 1),
+    ("external temp", 11),
+    ("internal temp: avbay", 11),
+    ("internal temp: engine bay", 11),
+    ("gps signal quality", 2),
+    ("gps antenna status", 2),
+    ("gps coord: long", 29),
+    ("failure flag", 10),
+    ("gps altitude", 15),
+    ("altitude", 15),
+    ("vertical velo", 15),
+    ("z accel", 11),
+    ("y accel", 9),
+    ("x accel", 9),
     ("mag y", 11),
     ("mag z", 11),
-    ("gps coord: long", 29),
-    ("failure flag", 13),
+    ("mag x", 11),
+    ("x gyro", 20),
+    ("y gyro", 20),
+    ("z gyro", 17),
+    ("gps speed", 10),
+    ("gps link", 3),
+    ("state", 4),
+    ("time", 19),
 ]
 
 swapper = [
-    (0, 1),
+    (13, 22),
 ]
 
-bitfield_vals, bitfield_names = distribute_bitfields(bitfield_list, WORD_SIZE, swapper)
+inserter = [
+    (20, 0),
+    (21, 0),
+    (21, 6),
+    (9, 6),
+    (12, 11),
+    (23, 11)
+]
+
+bitfield_vals, bitfield_names = distribute_bitfields(bitfield_list, WORD_SIZE, swapper, inserter)
 
 print()
+print(f"NOTE: THE FOLLOWING IS A SUGGESTION AS TO HOW TO ORGANIZE THE BITFIELD, IT IS RECOMMENDED THAT YOU SWITCH FIELD POSITIONS AS YOU SEE FIT")
 print(f"Arrange your {WORD_SIZE} bit words according to the buckets shown below:")
 print("-------------------------------------------------------------------")
 # used gpt for this printing part
@@ -118,5 +161,5 @@ for i, (vals, names) in enumerate(zip(bitfield_vals, bitfield_names)):
     # Print left-justified values and names
     # was a little scuffed so had to subtract 55, should be good all around tho, change the number as you please
     print(
-        f"Bucket {i + 1}: {vals}{' ' * (len(str(bitfield_vals)) - 120 - len(str(vals)))}  {names}"
+        f"Bucket {i + 1}: {vals}{' ' * (len(str(bitfield_vals)) - 80 - len(str(vals)))}  {names}"
     )

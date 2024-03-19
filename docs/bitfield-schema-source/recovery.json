@@ -1,0 +1,27 @@
+[
+    [
+        {"name": "STATE", "bits": 4, "type": 4},
+        {"name": "GPS LINK", "bits": 3, "type": 11},
+        {"name": "GPS LONG_SIGN", "bits": 1, "type": 5, "rotate": -45},
+        {"name": "GPS LONG", "bits": 28, "type": 5},
+        {"name": "GPS LAT_SIGN", "bits": 1, "type": 5, "rotate": -45},
+        {"name": "GPS LAT", "bits": 27, "type": 5},
+
+        {"name": "EXT TEMP", "bits": 11, "type": 2},
+        {"name": "INT TEMP ENGINE", "bits": 11, "type": 2},
+        {"name": "INT TEMP AVBAY", "bits": 11, "type": 2},
+        {"name": "GPS FIX", "bits": 1, "type": 11, "rotate": -45},
+        {"name": "FAILF", "bits": 10, "type": 8},
+        {"name": "GPS SIGQ", "bits": 2, "type": 11, "rotate": -45},
+        {"name": "GPS ANT", "bits": 2, "type": 11, "rotate": -45},
+        {"name": "ND", "bits": 16}
+    ],
+    [
+        {"vspace": 100},
+        {"hspace": 1400},
+        {"lanes": 2},
+        {"bits": 128},
+        {"hflip": true},
+        {"fontsize": 13}
+    ]
+]

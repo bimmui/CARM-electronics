@@ -11,29 +11,30 @@
         {"name": "GPS LAT", "bits": 27, "type": 5},
         
         {"name": "GYRO X", "bits": 20, "type": 10},
-        {"name": "ACCEL Y", "bits": 9, "type": 6},
-        {"name": "GYRO Y", "bits": 20, "type": 10},
-        {"name": "VELO", "bits": 15, "type": 9},
-
-        {"name": "GYRO Z", "bits": 17, "type": 10},
+        {"name": "GPS ALT", "bits": 15, "type": 11},
         {"name": "ACCEL X", "bits": 9, "type": 6},
-        {"name": "ALT", "bits": 15, "type": 7},
-        {"name": "GPS FIX", "bits": 1, "type": 11, "rotate": -45},
-        {"name": "EXT TEMP", "bits": 11, "type": 2},
-        {"name": "INT TEMP AVBAY", "bits": 11, "type": 2},
+        {"name": "GYRO Y", "bits": 20, "type": 10},
 
+        {"name": "TIME", "bits": 19, "type": 3},
+        {"name": "GYRO Z", "bits": 17, "type": 10},
+        {"name": "ALT", "bits": 15, "type": 7},
+        {"name": "GPS ANT", "bits": 2, "type": 11, "rotate": -45},
+        {"name": "EXT TEMP", "bits": 11, "type": 2},
+
+        {"name": "ACCEL Y", "bits": 9, "type": 6},
+        {"name": "INT TEMP AVBAY", "bits": 11, "type": 2},
+        {"name": "INT TEMP ENGINE", "bits": 11, "type": 2},
         {"name": "ACCEL Z", "bits": 11, "type": 6},
-        {"name": "MAG X", "bits": 11, "type": 15},
-        {"name": "MAG Y", "bits": 11, "type": 15},
-        {"name": "MAG Z", "bits": 11, "type": 15},
+        {"name": "MAG X", "bits": 11, "type": 3},
+        {"name": "MAG Y", "bits": 11, "type": 3},
+
+        {"name": "MAG Z", "bits": 11, "type": 3},
         {"name": "FAILF", "bits": 10, "type": 8},
         {"name": "GPS SP", "bits": 10, "type": 11},
-
-        {"name": "GPS ALT", "bits": 15, "type": 11},
+        {"name": "VELO", "bits": 15, "type": 9},
         {"name": "GPS SIGQ", "bits": 2, "type": 11, "rotate": -45},
-        {"name": "INT TEMP ENGINE", "bits": 11, "type": 2},
-        {"name": "GPS ANT", "bits": 2, "type": 11, "rotate": -45},
-        {"name": "ND", "bits": 34}
+        {"name": "GPS FIX", "bits": 1, "type": 11, "rotate": -45},
+        {"name": "ND", "bits": 15}
     ],
     [
         {"vspace": 100},
