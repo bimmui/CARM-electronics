@@ -1,23 +1,20 @@
 [
     [
-        {"name": "STATE", "bits": 3, "type": 4},
-        {"name": "FRAG NUM", "bits": 1, "type": 4,"rotate": -45},
-        {"name": "EXT TEMP_DEC", "bits": 1, "type": 2, "rotate": -45},
-        {"name": "EXT TEMP_SIGN", "bits": 1, "type": 2, "rotate": -45},
-        {"name": "EXT TEMP", "bits": 12, "type": 2},
-        {"name": "INT TEMP ENGINE", "bits": 12, "type": 2},
-        {"name": "INT TEMP AVBAY", "bits": 2, "type": 2, "rotate": -45},
-
-        {"name": "STATE", "bits": 3, "type": 4},
-        {"name": "FRAG NUM", "bits": 1, "type": 4, "rotate": -45},
-        {"name": "INT TEMP AVBAY", "bits": 10, "type": 2},
-        {"name": "SAT LINK", "bits": 3, "type": 11},
-        {"name": "ND", "bits": 11}
+        {"name": "STATE", "bits": 4, "type": 4},
+        {"name": "EXT TEMP", "bits": 11, "type": 2},
+        {"name": "INT TEMP ENGINE", "bits": 11, "type": 2},
+        {"name": "INT TEMP AVBAY", "bits": 11, "type": 2},
+        {"name": "GPS SIGQ", "bits": 2, "type": 11, "rotate": -45},
+        {"name": "GPS FIX", "bits": 1, "type": 11, "rotate": -45},
+        {"name": "GPS LINK", "bits": 3, "type": 11, "rotate": -30},
+        {"name": "GPS ANT", "bits": 2, "type": 11, "rotate": -45},
+        {"name": "FAILF", "bits": 10, "type": 8},
+        {"name": "ND", "bits": 9}
     ],
     [
         {"vspace": 100},
         {"hspace": 1400},
-        {"lanes": 2},
+        {"lanes": 1},
         {"bits": 64},
         {"hflip": true},
         {"fontsize": 13}
