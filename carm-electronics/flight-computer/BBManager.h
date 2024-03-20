@@ -57,6 +57,8 @@ public:
     int gps_num_satellites;
     int gps_antenna_status;
     state curr_state;
+    // TODO: make functions that edit the bit mask whenever an error occurs
+    uint16_t errors_bit_mask;
 
 private:
     // TODO: Fix all the GPS stuff here, it doesnt set it up with the function
