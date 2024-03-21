@@ -2,6 +2,6 @@
 #include "BBManager.h"
 
 // TODO: Complete this func, takes in bbman and modifies its curr_state attribute
-void stateDeterminer(BBManager manager)
+void state_determiner(BBManager manager)
 {
 }

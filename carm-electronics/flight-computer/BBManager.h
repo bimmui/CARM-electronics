@@ -35,9 +35,11 @@ public:
     unsigned long launch_start_time;
     float temperature_avbay;
     float temperature_engbay;
+    float external_temp;
     float altimeter_temp;
     float pressure;
     float altitude;
+    float vert_velocity;
     float accel_x;
     float accel_y;
     float accel_z;
@@ -57,8 +59,8 @@ public:
     int gps_num_satellites;
     int gps_antenna_status;
     state curr_state;
-    // TODO: make functions that edit the bit mask whenever an error occurs
     uint16_t errors_bit_mask;
+    // TODO: make functions that edit the bit mask whenever an error occurs
 
 private:
     // TODO: Fix all the GPS stuff here, it doesnt set it up with the function
