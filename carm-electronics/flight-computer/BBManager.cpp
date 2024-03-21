@@ -54,11 +54,13 @@ BBManager::BBManager()
         launch_data.print(",");
         launch_data.print("av bay temperature (C)"); // in Celcius
         launch_data.print(",");
-        launch_data.print("temp from altimeter (C)"); // in Celcius
+        launch_data.print("altimeter temp (C)"); // in Celcius
         launch_data.print(",");
         launch_data.print("air pressure (kPa)"); // in kiloPascals
         launch_data.print(",");
         launch_data.print("altitude (m)"); // in meters
+        launch_data.print(",");
+        launch_data.print("vertical velocity (m/s)"); // in Celcius
         launch_data.print(",");
         launch_data.print("x acceleration (m/s^2)"); // in meters per sec^2
         launch_data.print(",");
@@ -94,7 +96,9 @@ BBManager::BBManager()
         launch_data.print(",");
         launch_data.print("gps satellites");
         launch_data.print(",");
-        launch_data.println("gps antenna");
+        launch_data.println("gps antenna status");
+        launch_data.print(",");
+        launch_data.println("error flags");
         launch_data.close();
     }
 }
@@ -132,11 +136,13 @@ void BBManager::readSensorData()
         // TODO: change this so that this is actually the max value that the bit field of these
         //          can have. Pressure isnt being transmitted so idc what you do there, make sure the
         //          value there is extraneous
+        // TODO: Write something that sets an error value for the barometer
         pressure = -1111111;
         altitude = -1111111;
     }
     else
     {
+        // TODO: Write something that get the temperature from the barometer
         pressure = bmp.pressure / 100.0;
         altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
     }
@@ -152,6 +158,10 @@ void BBManager::readSensorData()
     gyro_x = g.gyro.x;
     gyro_y = g.gyro.y;
     gyro_z = g.gyro.z;
+
+    // TODO: Add code that gets readings from the GPS
+
+    // TODO: Add kalman filtering code that calculates vertical velocity
 }
 
 /*

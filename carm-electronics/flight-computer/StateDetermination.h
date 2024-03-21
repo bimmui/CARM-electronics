@@ -15,6 +15,6 @@ enum class state
     RECOVERY
 };
 
-void stateDeterminer(BBManager manager);
+void state_determiner(BBManager manager);
 
 #endif
