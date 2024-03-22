@@ -13,13 +13,13 @@ const float GPS_SPEED_SPACING = 0.0999481185339;
 
 unsigned int serialize_dlt(unsigned int bit_count, int n_min, int n_max, float reading, float m_spacing)
 {
-  unsigned int serialized_data = floor(((reading - n_min) / m_spacing) - 1);
+  unsigned int serialized_data = floor((reading - n_min) / m_spacing);
   return serialized_data;
 }
 
 float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 {
-  float deserialized_data = (((serialized + 1) * m_spacing) + n_min);
+  float deserialized_data = ((serialized * m_spacing) + n_min);
   return deserialized_data;
 }
 
@@ -28,9 +28,9 @@ unsigned int *transform_poweron(BBManager bbman)
   unsigned int transformed_values[8];
 
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
-  transformed_values[1] = serialize_dlt(11, -15, 125, bbman.external_temp);
-  transformed_values[2] = serialize_dlt(11, 0, 127, bbman.temperature_engbay);
-  transformed_values[3] = serialize_dlt(11, 0, 127, bbman.temperature_avbay);
+  transformed_values[1] = serialize_dlt(11, -15, 125, bbman.external_temp, EXT_TEMP_SPACING);
+  transformed_values[2] = serialize_dlt(11, 0, 127, bbman.temperature_engbay, INT_TEMP_SPACING);
+  transformed_values[3] = serialize_dlt(11, 0, 127, bbman.temperature_avbay, INT_TEMP_SPACING);
   transformed_values[4] = bbman.gps_quality;
   transformed_values[5] = bbman.gps_num_satellites;
   transformed_values[6] = bbman.gps_antenna_status;
