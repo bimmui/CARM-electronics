@@ -22,7 +22,7 @@ unsigned int serialize_dlt(unsigned int bit_count, int n_min, int n_max, float r
 
 float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 {
-    float deserialized_data = ((serialized * m_spacing) + n_min);
+    float deserialized_data = (static_cast<float>(serialized * m_spacing) + n_min);
     return deserialized_data;
 }
 
@@ -56,34 +56,34 @@ TEST_CASE("Testing Discrete Lossy Transform with the ranges of different values"
     }
     SUBCASE("Deserialization with external temperature")
     {
-        unsigned int serial_min_val = deserialize_dlt(serialize_dlt(11, -15, 125, -15.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_max_val = deserialize_dlt(serialize_dlt(11, -15, 125, 125.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_neg_val = deserialize_dlt(serialize_dlt(11, -15, 125, -5.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_neg_val_w_decimal = deserialize_dlt(serialize_dlt(11, -15, 125, -6.529249272520528522, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_pos_val_w_decimal = deserialize_dlt(serialize_dlt(11, -15, 125, 31.9418419481819818198, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_just_below_min_range = deserialize_dlt(serialize_dlt(11, -15, 125, -15.0001, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_below_min_range = deserialize_dlt(serialize_dlt(11, -15, 125, -20.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_just_above_max_range = deserialize_dlt(serialize_dlt(11, -15, 125, 125.1, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_above_max_range = deserialize_dlt(serialize_dlt(11, -15, 125, 150.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
-        unsigned int serial_normal_case = deserialize_dlt(serialize_dlt(11, -15, 125, 25.5, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_min_val = deserialize_dlt(serialize_dlt(11, -15, 125, -15.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_max_val = deserialize_dlt(serialize_dlt(11, -15, 125, 125.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_neg_val = deserialize_dlt(serialize_dlt(11, -15, 125, -5.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_neg_val_w_decimal = deserialize_dlt(serialize_dlt(11, -15, 125, -6.529249272520528522, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_pos_val_w_decimal = deserialize_dlt(serialize_dlt(11, -15, 125, 31.9418419481819818198, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_just_below_min_range = deserialize_dlt(serialize_dlt(11, -15, 125, -15.0001, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_below_min_range = deserialize_dlt(serialize_dlt(11, -15, 125, -20.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_just_above_max_range = deserialize_dlt(serialize_dlt(11, -15, 125, 125.1, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_above_max_range = deserialize_dlt(serialize_dlt(11, -15, 125, 150.0, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
+        float deserial_normal_case = deserialize_dlt(serialize_dlt(11, -15, 125, 25.5, EXT_TEMP_SPACING), -15, EXT_TEMP_SPACING);
 
-        CHECK(serial_min_val == -15);
-        CHECK(serial_max_val == 125);
-        CHECK(serial_neg_val >= -5.02);
-        CHECK(serial_neg_val <= -5.00);
-        CHECK(serial_neg_val_w_decimal >= -6.588);
-        CHECK(serial_neg_val_w_decimal <= -6.580);
-        CHECK(serial_pos_val_w_decimal >= 31.91);
-        CHECK(serial_pos_val_w_decimal <= 31.92);
-        CHECK(serial_just_below_min_range >= -15.07);
-        CHECK(serial_just_below_min_range <= -15);
-        CHECK(serial_below_min_range >= -20.7);
-        CHECK(serial_below_min_range >= -20);
-        CHECK(serial_just_above_max_range >= 125.0);
-        CHECK(serial_just_above_max_range >= 125.07);
-        CHECK(serial_above_max_range >= 149.9);
-        CHECK(serial_above_max_range <= 149.97);
-        CHECK(serial_normal_case >= 25.7);
-        CHECK(serial_normal_case <= 25.7);
+        CHECK(deserial_min_val == -15);
+        CHECK(deserial_max_val == 125);
+        CHECK(deserial_neg_val >= -5.02);
+        CHECK(deserial_neg_val <= -5.00);
+        CHECK(deserial_neg_val_w_decimal >= -6.588);
+        CHECK(deserial_neg_val_w_decimal <= -6.580);
+        CHECK(deserial_pos_val_w_decimal >= 31.91);
+        CHECK(deserial_pos_val_w_decimal <= 31.92);
+        CHECK(deserial_just_below_min_range >= -15.07);
+        CHECK(deserial_just_below_min_range <= -15.0);
+        CHECK(deserial_below_min_range >= -20.7);
+        CHECK(deserial_below_min_range >= -20);
+        CHECK(deserial_just_above_max_range >= 125.0);
+        CHECK(deserial_just_above_max_range >= 125.07);
+        CHECK(deserial_above_max_range >= 149.9);
+        CHECK(deserial_above_max_range <= 149.97);
+        CHECK(deserial_normal_case >= 25.0);
+        CHECK(deserial_normal_case <= 25.7);
     }
 }
