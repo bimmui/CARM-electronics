@@ -173,7 +173,11 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
-
 # VSCode shit
 .vscode/
 
+# .exe from C++ unit test builds
+*.exe
+*.ilk
+*.obj
+*.pdb
