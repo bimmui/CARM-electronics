@@ -5,28 +5,13 @@ DLT_test.cpp(31):
 TEST CASE:  Testing Discrete Lossy Transform with the ranges of different values
   Deserialization with external temperature
 
-DLT_test.cpp(73): ERROR: CHECK( serial_neg_val <= -5.00 ) is NOT correct!
-  values: CHECK( 4294967291 <= -5 )
+DLT_test.cpp(79): ERROR: CHECK( deserial_just_below_min_range <= -15.0 ) is NOT correct!
+  values: CHECK( 2.93745e+08 <= -15 )
 
-DLT_test.cpp(75): ERROR: CHECK( serial_neg_val_w_decimal <= -6.580 ) is NOT correct!
-  values: CHECK( 4294967290 <= -6.58 )
-
-DLT_test.cpp(76): ERROR: CHECK( serial_pos_val_w_decimal >= 31.91 ) is NOT correct!
-  values: CHECK( 31 >= 31.91 )
-
-DLT_test.cpp(81): ERROR: CHECK( serial_below_min_range >= -20 ) is NOT correct!
-  values: CHECK( 293744704 >= -20 )
-
-DLT_test.cpp(83): ERROR: CHECK( serial_just_above_max_range >= 125.07 ) is NOT correct!
-  values: CHECK( 125 >= 125.07 )
-
-DLT_test.cpp(84): ERROR: CHECK( serial_above_max_range >= 149.9 ) is NOT correct!
-  values: CHECK( 149 >= 149.9 )
-
-DLT_test.cpp(86): ERROR: CHECK( serial_normal_case >= 25.7 ) is NOT correct!
-  values: CHECK( 25 >= 25.7 )
+DLT_test.cpp(83): ERROR: CHECK( deserial_just_above_max_range >= 125.07 ) is NOT correct!
+  values: CHECK( 125.068 >= 125.07 )
 
 ===============================================================================
 [doctest] test cases:  2 |  1 passed | 1 failed | 0 skipped
-[doctest] assertions: 28 | 21 passed | 7 failed |
+[doctest] assertions: 28 | 26 passed | 2 failed |
 [doctest] Status: FAILURE!
