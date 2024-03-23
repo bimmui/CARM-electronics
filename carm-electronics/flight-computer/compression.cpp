@@ -11,7 +11,6 @@
  **************************************************************/
 
 #include "compression.h"
-#include "DLTransform.h"
 #include <inttypes.h>
 
 static const unsigned MAX_WORD_SIZE = 64;

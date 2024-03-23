@@ -51,7 +51,7 @@ float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 unsigned int *transform_poweron(BBManager bbman)
 {
   // there are 9 fields in this schema
-  unsigned int transformed_values[8];
+  unsigned int transformed_values[9];
 
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
   transformed_values[1] = serialize_dlt(11, -15, 125, bbman.external_temp, EXT_TEMP_SPACING);
