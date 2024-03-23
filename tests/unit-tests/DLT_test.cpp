@@ -76,7 +76,7 @@ TEST_CASE("Testing Discrete Lossy Transform with the ranges of different values"
         CHECK(deserial_pos_val_w_decimal >= 31.91);
         CHECK(deserial_pos_val_w_decimal <= 31.92);
         CHECK(deserial_just_below_min_range >= -15.07);
-        CHECK(deserial_just_below_min_range <= -15.0);
+        CHECK(deserial_just_below_min_range <= -15.0); // I expect this to fail
         CHECK(deserial_below_min_range >= -20.7);
         CHECK(deserial_below_min_range >= -20);
         CHECK(deserial_just_above_max_range >= 125.0);

@@ -1,3 +1,15 @@
+/**************************************************************
+ *
+ *                     StateDetermination.cpp
+ *
+ *     Author(s):  Daniel Opara
+ *     Date:       3/20/2024
+ *
+ *     Overview: Implementation of StateDetermination.h
+ *
+ *
+ **************************************************************/
+
 #include "StateDetermination.h"
 #include "BBManager.h"
 

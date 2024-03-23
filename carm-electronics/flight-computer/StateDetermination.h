@@ -1,3 +1,16 @@
+/**************************************************************
+ *
+ *                     StateDetermination.h
+ *
+ *     Author(s):  Daniel Opara
+ *     Date:       3/20/2024
+ *
+ *     Overview: Uses sensor readings stored in BBManager to determine
+ *                  the current state of the rocket
+ *
+ *
+ **************************************************************/
+
 #ifndef STATE_DETERMINATION_H
 #define STATE_DETERMINATION_H
 

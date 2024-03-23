@@ -32,7 +32,8 @@ public:
     ~BBManager();
     void readSensorData();
     void writeSensorData();
-    unsigned long launch_start_time;
+    unsigned launch_start_time;
+    unsigned curr_launch_time;
     float temperature_avbay;
     float temperature_engbay;
     float external_temp;
