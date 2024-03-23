@@ -4,6 +4,8 @@ This repository houses the source code for the flight computer software running 
 
 This document provides instructions on setting up the Conda environment for the project using the provided ```carm.yml``` file and prepping your Arduino environment with the proper libraries.
 
+An in-depth guide to the entirety of this repository can be viewed on the section of the [Tufts SEDS Wiki on CARM](https://sedstufts.notion.site/CARM-Technical-Documentation-2e8ebba6ad954b1c946b6060394e9795).
+
 
 ## Getting Started
 The flight computer is based on the Adafruit Feather M0 RFM96 LoRa Radio (433MHz) and utilizes the Arduino environment for ease of library management and quick development. Therefore, the Arduino IDE is recommened for writing the flight code. The ground station uses Dash, a Python framework made by Plotly for creating interactive web applications. All Python packages are managed using Conda, however, you are free to use any package manager of your choosing.

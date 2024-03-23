@@ -11,7 +11,7 @@
  **************************************************************/
 
 #include "compression.h"
-#include <inttypes.h>
+#include "bitpack.h"
 
 static const unsigned MAX_WORD_SIZE = 64;
 
@@ -23,7 +23,7 @@ static const unsigned MAX_WORD_SIZE = 64;
  * Notes: Follow guidelines of the POWER ON bitfield schema
  *
  */
-uint64_t pack_poweron(unsigned int *transformed_data)
+uint64_t pack_poweron(unsigned int transformed_data[])
 {
     uint64_t raw_word = 0;
     unsigned bit_count = MAX_WORD_SIZE;
@@ -58,9 +58,9 @@ uint64_t pack_poweron(unsigned int *transformed_data)
  * Notes: Follow guidelines of the LAUNCH READY bitfield schema
  *
  */
-uint64_t *pack_launchready(unsigned int *transformed_data)
+uint64_t *pack_launchready(unsigned int transformed_data[])
 {
-    uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
@@ -136,9 +136,9 @@ uint64_t *pack_launchready(unsigned int *transformed_data)
  * Notes: Follow guidelines of the LAUNCH MODE bitfield schema
  *
  */
-uint64_t *pack_launchmode(unsigned int *transformed_data)
+uint64_t *pack_launchmode(unsigned int transformed_data[])
 {
-    uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
@@ -216,9 +216,9 @@ uint64_t *pack_launchmode(unsigned int *transformed_data)
  * Notes: Follow guidelines of the RECOVERY MODE bitfield schema
  *
  */
-uint64_t *pack_recovery(unsigned int *transformed_data)
+uint64_t *pack_recovery(unsigned int transformed_data[])
 {
-    uint64_t raw_words[2] = {0, 0};
+    static uint64_t raw_words[2] = {0, 0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,

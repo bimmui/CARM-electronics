@@ -16,12 +16,12 @@
 
 #include <inttypes.h>
 
-uint64_t pack_poweron(unsigned int *transformed_data);
+uint64_t pack_poweron(unsigned int transformed_data[]);
 
-uint64_t *pack_launchready(unsigned int *transformed_data);
+uint64_t *pack_launchready(unsigned int transformed_data[]);
 
-uint64_t *pack_launchmode(unsigned int *transformed_data);
+uint64_t *pack_launchmode(unsigned int transformed_data[]);
 
-uint64_t *pack_recovery(unsigned int *transformed_data);
+uint64_t *pack_recovery(unsigned int transformed_data[]);
 
 #endif
