@@ -2,6 +2,7 @@
 #define BITPACK_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 static uint64_t
 shift_left(uint64_t word, unsigned bits);
