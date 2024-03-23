@@ -1,6 +1,6 @@
 /**************************************************************
  *
- *                     utility.h
+ *                     utils.h
  *
  *     Author(s):  Daniel Opara,
  *     Date:       1/9/2024
@@ -14,13 +14,14 @@
 #include "def.h"
 
 /*
- * convertToDecimalDegrees
+ * convert_to_decimaldegrees
  * Parameters: Coordinate value in the form of degrees and decimal minutes and the cardinal direction
  * Purpose: Converts GPS coordinates from degrees and decimal minutes format to decimal degrees format
  * Returns: Nothing
- * Notes: The GPS module outputs the
+ * Notes: The GPS module outputs coordinates in degrees and decimal minutes which is harder to
+ *          to interpret than decimal degrees
  */
-float convertToDecimalDegrees(float coordinate, char direction)
+float convert_to_decimaldegrees(float coordinate, char direction)
 {
     // extracting the degrees and minutes from the coordinate value
 
@@ -44,12 +45,22 @@ float convertToDecimalDegrees(float coordinate, char direction)
  * Parameters: The acceleration in the x, y, and z direction
  * Purpose: Calculates the average acceleration of the rocket
  * Returns: Nothing
- * Notes:
  */
-float calculateAverageAcceleration(float x_accel, float y_accel, float z_accel)
+float calculate_average_acceleration(float x_accel, float y_accel, float z_accel)
 {
     float sum_squared_coordinates = (x_accel * x_accel) + (y_accel * y_accel) + (z_accel * z_accel);
     return sqrt(sum_squared_coordinates);
+}
+
+/*
+ * convert_knots_to_mps
+ * Parameters: The speed in knots
+ * Purpose: Converts the unit of speed from knots to meters per second (m/s)
+ * Returns: Nothing
+ */
+float convert_knots_to_mps(float knots)
+{
+    return knots * 0.514444;
 }
 
 /*

@@ -1,4 +1,3 @@
-
 /**************************************************************
  *
  *                     BBManager.cpp
@@ -106,6 +105,7 @@ BBManager::BBManager()
 /*
  * BBManager destructor
  * Parameters: None
+ * Returns: Nothing
  * Purpose: Cleans up mem of BBManager objects
  * Notes: None
  *
@@ -128,6 +128,8 @@ void BBManager::readSensorData()
     lsm.read();
     sensors_event_t a, m, g, temp;
     lsm.getEvent(&a, &m, &g, &temp);
+
+    curr_launch_time = millis() - launch_start_time;
 
     // bmp reading
     if (!bmp.performReading())
@@ -185,9 +187,9 @@ void BBManager::writeSensorData()
         }
         else
         {
-            launch_data.print(millis() - launch_start_time);
+            launch_data.print(curr_launch_time);
         }
-        launch_data.print(millis() - launch_start_time);
+        launch_data.print(curr_launch_time);
         launch_data.print(",");
         launch_data.print(temperature_avbay);
         launch_data.print(",");
@@ -241,7 +243,7 @@ void BBManager::writeSensorData()
         error_data = SD.open("errlog.txt", FILE_WRITE);
         if (error_data)
         {
-            error_data.print(millis() - launch_start_time);
+            error_data.print(curr_launch_time);
             error_data.print(": ");
             error_data.println("Error logging flight data");
             error_data.close();

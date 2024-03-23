@@ -1,1 +1,2 @@
-DLT_test.exe --out=dlt_results.txt --no-path-filenames=true
+DLT_test.exe --out=dlt_results.txt --no-path-filenames=true --success=true
+bitpack_test.exe --out=bitpack_results.txt --no-path-filenames=true --success=true

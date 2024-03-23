@@ -3,13 +3,96 @@
 ===============================================================================
 DLT_test.cpp(31):
 TEST CASE:  Testing Discrete Lossy Transform with the ranges of different values
+  Serialization with external temperature
+
+DLT_test.cpp(46): SUCCESS: CHECK( min_val == 0 ) is correct!
+  values: CHECK( 0 == 0 )
+
+DLT_test.cpp(47): SUCCESS: CHECK( max_val == 2047 ) is correct!
+  values: CHECK( 2047 == 2047 )
+
+DLT_test.cpp(48): SUCCESS: CHECK( neg_val == 146 ) is correct!
+  values: CHECK( 146 == 146 )
+
+DLT_test.cpp(49): SUCCESS: CHECK( neg_val_w_decimal == 123 ) is correct!
+  values: CHECK( 123 == 123 )
+
+DLT_test.cpp(50): SUCCESS: CHECK( pos_val_w_decimal == 686 ) is correct!
+  values: CHECK( 686 == 686 )
+
+DLT_test.cpp(51): SUCCESS: CHECK( just_below_min_range == -1 ) is correct!
+  values: CHECK( 4294967295 == -1 )
+
+DLT_test.cpp(52): SUCCESS: CHECK( below_min_range == -74 ) is correct!
+  values: CHECK( 4294967222 == -74 )
+
+DLT_test.cpp(53): SUCCESS: CHECK( just_above_max_range == 2048 ) is correct!
+  values: CHECK( 2048 == 2048 )
+
+DLT_test.cpp(54): SUCCESS: CHECK( above_max_range == 2412 ) is correct!
+  values: CHECK( 2412 == 2412 )
+
+DLT_test.cpp(55): SUCCESS: CHECK( normal_case == 592 ) is correct!
+  values: CHECK( 592 == 592 )
+
+===============================================================================
+DLT_test.cpp(31):
+TEST CASE:  Testing Discrete Lossy Transform with the ranges of different values
   Deserialization with external temperature
+
+DLT_test.cpp(70): SUCCESS: CHECK( deserial_min_val == -15 ) is correct!
+  values: CHECK( -15 == -15 )
+
+DLT_test.cpp(71): SUCCESS: CHECK( deserial_max_val == 125 ) is correct!
+  values: CHECK( 125 == 125 )
+
+DLT_test.cpp(72): SUCCESS: CHECK( deserial_neg_val >= -5.02 ) is correct!
+  values: CHECK( -5.01466 >= -5.02 )
+
+DLT_test.cpp(73): SUCCESS: CHECK( deserial_neg_val <= -5.00 ) is correct!
+  values: CHECK( -5.01466 <= -5 )
+
+DLT_test.cpp(74): SUCCESS: CHECK( deserial_neg_val_w_decimal >= -6.588 ) is correct!
+  values: CHECK( -6.58769 >= -6.588 )
+
+DLT_test.cpp(75): SUCCESS: CHECK( deserial_neg_val_w_decimal <= -6.580 ) is correct!
+  values: CHECK( -6.58769 <= -6.58 )
+
+DLT_test.cpp(76): SUCCESS: CHECK( deserial_pos_val_w_decimal >= 31.91 ) is correct!
+  values: CHECK( 31.9174 >= 31.91 )
+
+DLT_test.cpp(77): SUCCESS: CHECK( deserial_pos_val_w_decimal <= 31.92 ) is correct!
+  values: CHECK( 31.9174 <= 31.92 )
+
+DLT_test.cpp(78): SUCCESS: CHECK( deserial_just_below_min_range >= -15.07 ) is correct!
+  values: CHECK( 2.93745e+08 >= -15.07 )
 
 DLT_test.cpp(79): ERROR: CHECK( deserial_just_below_min_range <= -15.0 ) is NOT correct!
   values: CHECK( 2.93745e+08 <= -15 )
 
+DLT_test.cpp(80): SUCCESS: CHECK( deserial_below_min_range >= -20.7 ) is correct!
+  values: CHECK( 2.93745e+08 >= -20.7 )
+
+DLT_test.cpp(81): SUCCESS: CHECK( deserial_below_min_range >= -20 ) is correct!
+  values: CHECK( 2.93745e+08 >= -20 )
+
+DLT_test.cpp(82): SUCCESS: CHECK( deserial_just_above_max_range >= 125.0 ) is correct!
+  values: CHECK( 125.068 >= 125 )
+
 DLT_test.cpp(83): ERROR: CHECK( deserial_just_above_max_range >= 125.07 ) is NOT correct!
   values: CHECK( 125.068 >= 125.07 )
+
+DLT_test.cpp(84): SUCCESS: CHECK( deserial_above_max_range >= 149.9 ) is correct!
+  values: CHECK( 149.963 >= 149.9 )
+
+DLT_test.cpp(85): SUCCESS: CHECK( deserial_above_max_range <= 149.97 ) is correct!
+  values: CHECK( 149.963 <= 149.97 )
+
+DLT_test.cpp(86): SUCCESS: CHECK( deserial_normal_case >= 25.0 ) is correct!
+  values: CHECK( 25.4885 >= 25 )
+
+DLT_test.cpp(87): SUCCESS: CHECK( deserial_normal_case <= 25.7 ) is correct!
+  values: CHECK( 25.4885 <= 25.7 )
 
 ===============================================================================
 [doctest] test cases:  2 |  1 passed | 1 failed | 0 skipped
