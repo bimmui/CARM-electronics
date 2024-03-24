@@ -18,21 +18,19 @@
 #include "Adafruit_BMP3XX.h"  // BMP module
 #include "Adafruit_MCP9808.h" // Temp sensor module
 #include <Adafruit_GPS.h>     // GPS module
-#include "utils.h"
 #include "def.h"
+#include "utils.h"
 #include "BBManager.h"
 #include "DLTransforms.h"
 #include "compression.h"
 #include "decompression.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   Defining sensor objects and structs
+//   Initializing revelant objects and structs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 BBManager bboard_manager = BBManager();
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   Defining Rocket States and relevant indicators
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Singleton instance of the radio driver
+RH_RF95 rf96(RFM96_CS, RFM96_INT);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
@@ -92,19 +90,24 @@ void loop()
 {
     bboard_manager.readSensorData();
     state_determiner(bboard_manager);
+    switchSPIDevice(SD_CS);
     bboard_manager.writeSensorData();
+    switchSPIDevice(RFM96_CS);
     switch (bboard_manager.curr_state)
     {
     case state::POWER_ON:
     {
         unsigned int *poweron_d = transform_poweron(bboard_manager);
-        uint64_t poweron_word = pack_poweron(poweron_d);
-        break;
+        uint64_t[1] poweron_word = {pack_poweron(poweron_d)};
+        transmit(rf96, poweron_word, 1);
+        receive(rf96, 1) break;
     }
     case state::LAUNCH_READY:
     {
         unsigned int *launchready_d = transform_launchready(bboard_manager);
         uint64_t *launchready_words = pack_launchready(launchready_d);
+        transmit(rf96, launchready_words, 5);
+        receive(rf96, 1);
         break;
     }
     default:
@@ -124,15 +127,15 @@ void loop()
 void switchSPIDevice(int cs_pin)
 {
     // we want to use radio in this
-    if (cs_pin == RFM95_CS)
+    if (cs_pin == RFM96_CS)
     {
         digitalWrite(SD_CS, HIGH);
-        digitalWrite(RFM95_CS, LOW);
+        digitalWrite(RFM96_CS, LOW);
     }
     // we want to use the sd card module in this
     if (cs_pin == SD_CS)
     {
-        digitalWrite(RFM95_CS, HIGH);
+        digitalWrite(RFM96_CS, HIGH);
         digitalWrite(SD_CS, LOW);
     }
 }
