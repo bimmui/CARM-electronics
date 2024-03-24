@@ -11,6 +11,9 @@
  **************************************************************/
 
 #include <math.h>
+#include <SPI.h>
+#include <RH_RF95.h>
+#include <inttypes.h>
 #include "def.h"
 
 /*
@@ -63,33 +66,31 @@ float convert_knots_to_mps(float knots)
     return knots * 0.514444;
 }
 
-/*
- * calculateCurrVelocity
- * Parameters: The acceleration in the x, y, and z direction
- * Purpose: Calculates the average acceleration of the rocket
- * Returns: Nothing
- * Notes:
- */
-// float calculateCurrVelocity(float prev_velocity, float y_accel, float z_accel)
-// {
-// }
+void transmit(RH_RF95 rf95, uint64_t packet[], uint8_t packet_len)
+{
+    uint64_t temp_packet[packet_len];
+    delay(10);
+    rf95.send((uint8_t *)packet, sizeof(temp_packet));
+    delay(10);
+    rf95.waitPacketSent();
+}
 
-/*
- * calculateAverageAcceleration
- * Parameters: Pointers to the queues used for calculating the moving average of
- *                 velocity, altitude, and acceleration
- * Purpose: Fills up the queues with values before starting the main control loop
- * Returns: Nothing
- * Notes: The queues need to be filled up to prevent any undefined behavior when doing
- *              calculations with empty indicies
- */
-// void setupMovingAvgArrs(cppQueue velocity_arr, cppQueue altitude_arr, cppQueue accel_arr,
-//                         Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj, )
-// {
-//     // Take QUEUE_MAX_LENGTH readings from each sensor and store in their
-//     // moving average queues
-//     for (int i = 0; i < QUEUE_MAX_LENGTH; i++)
-//     {
-//         //
-//     }
-// }
+uint64_t *receive(RH_RF95 rf95, uint8_t packet_len)
+{
+    if (rf95.available())
+    {
+        // Should be a message for us now
+        static uint64_t buf[packet_len];
+        uint8_t size = sizeof(buf);
+
+        if (rf95.recv((uint8_t *)buf, &size))
+        {
+            return buf;
+        }
+        else
+        {
+            static uint64_t fail[1] = {0};
+            return fail;
+        }
+    }
+}
