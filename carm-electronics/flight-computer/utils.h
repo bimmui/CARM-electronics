@@ -66,24 +66,24 @@ float convert_knots_to_mps(float knots)
     return knots * 0.514444;
 }
 
-void transmit(RH_RF95 rf95, uint64_t packet[], uint8_t packet_len)
+void transmit(RH_RF95 rf96, uint64_t packet[], uint8_t packet_len)
 {
     uint64_t temp_packet[packet_len];
     delay(10);
-    rf95.send((uint8_t *)packet, sizeof(temp_packet));
+    rf96.send((uint8_t *)packet, sizeof(temp_packet));
     delay(10);
-    rf95.waitPacketSent();
+    rf96.waitPacketSent();
 }
 
-uint64_t *receive(RH_RF95 rf95, uint8_t packet_len)
+uint64_t *receive(RH_RF95 rf96, uint8_t packet_len)
 {
-    if (rf95.available())
+    if (rf96.available())
     {
         // Should be a message for us now
         static uint64_t buf[packet_len];
         uint8_t size = sizeof(buf);
 
-        if (rf95.recv((uint8_t *)buf, &size))
+        if (rf96.recv((uint8_t *)buf, &size))
         {
             return buf;
         }
