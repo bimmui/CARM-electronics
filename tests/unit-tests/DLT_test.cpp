@@ -26,7 +26,11 @@ float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
     return deserialized_data;
 }
 
-TEST_CASE("We reference the calculations done in the Desmos notebook linked in the CARM Transmission Protocol paper for checking if values are correct.") {}
+TEST_CASE("Intro")
+{
+    MESSAGE("We reference the calculations done in the Desmos notebook linked in the CARM Transmission Protocol paper for checking if values are correct.");
+    MESSAGE("Here is the link to the desmos notebook for reference: https://www.desmos.com/calculator/aotbc7r3zv");
+}
 
 TEST_CASE("Testing Discrete Lossy Transform with the ranges of different values")
 {
