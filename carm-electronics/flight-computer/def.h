@@ -45,13 +45,3 @@
 #define SD_CS 13
 #define GPSSerial Serial1
 #define GPSECHO false
-// queue constants
-#define IMPLEMENTATION FIFO
-#define QUEUE_MAX_LENGTH 20
-
-#if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
-#define RFM95_CS 8
-#define RFM95_INT 3
-#define RFM95_RST 4
-
-#endif
