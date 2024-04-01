@@ -2,7 +2,7 @@
  *
  *                     carm_computer_launch1.ino
  *
- *     Author(s):  Daniel Opara, Kenny Chua
+ *     Author(s):  Daniel Opara
  *     Date:       1/6/2024
  *
  *     Overview: Driver code for the rocket computer. Gets readings from the sensors
@@ -13,11 +13,6 @@
 
 #include <Wire.h>
 #include <SD.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_LSM9DS1.h> // IMU module
-#include "Adafruit_BMP3XX.h"  // BMP module
-#include "Adafruit_MCP9808.h" // Temp sensor module
-#include <Adafruit_GPS.h>     // GPS module
 #include "def.h"
 #include "utils.h"
 #include "BBManager.h"
@@ -36,7 +31,7 @@ RH_RF95 rf96(RFM96_CS, RFM96_INT);
 //   Function contracts
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //! TODO: Test this
-void switchSPIDevice(int cs_pin);
+void switchSPI_device(int cs_pin);
 
 // TODO: Move this to bbman cpp file
 // void readGPS(SensorData &sensor_data)
@@ -83,16 +78,16 @@ void setup()
     // pinMode(J2, OUTPUT);
 
     // Switch the spi device before setting up the SD card module
-    switchSPIDevice(SD_CS);
+    switchSPI_device(SD_CS);
 }
 
 void loop()
 {
     bboard_manager.readSensorData();
     state_determiner(bboard_manager);
-    switchSPIDevice(SD_CS);
+    switchSPI_device(SD_CS);
     bboard_manager.writeSensorData();
-    switchSPIDevice(RFM96_CS);
+    switchSPI_device(RFM96_CS);
     switch (bboard_manager.curr_state)
     {
     case state::POWER_ON:
@@ -117,14 +112,14 @@ void loop()
 }
 
 /*
- * switchSPIDevice
+ * switchSPI_device
  * Parameters: An integer that represents the CS pin of an SPI device
  * Purpose: Switches the SPI device to communicate with.
  * Returns: Nothing
  * Notes: The Feather can only "talk" to one device at a time so we much switch
  *          the CS pin that is being listened to before using the respective device
  */
-void switchSPIDevice(int cs_pin)
+void switchSPI_device(int cs_pin)
 {
     // we want to use radio in this
     if (cs_pin == RFM96_CS)
