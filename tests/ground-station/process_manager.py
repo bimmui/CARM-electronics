@@ -1,4 +1,6 @@
 import multiprocessing
+from pprint import pprint
+from multiprocessing.managers import BaseManager
 import time
 import pdb
 from queue import Empty
@@ -7,7 +9,32 @@ from dash import dcc, html, Input, Output, callback
 import plotly.graph_objs as go
 
 
-def dashboard(q):
+class DummyRocket:
+    """Creates objects that simulates the velocity and altitude of a rocket when launched.
+
+    The rocket simulation is very rough but follows that of
+    a generic parabolic curve given the time (x-value) the rocket should apogee.
+    The ``duration`` parameter of ``launch()`` should be changed to account for any change in
+    the burnout_time and apogee_time, but it isn't necessary.
+
+    TODO: Add more attributes to the rocket that would be transmitted down to the ground station
+    """
+
+    def __init__(self):
+        self.time_series_data = {"Time": [], "Altitude": [], "Velocity": []}
+
+    # Need to make getter and setter funcs bc proxy objs are spawned by the manager,
+    #   so direct access is not possible
+    def set(self, min_dict):
+        for key, value in min_dict.items():
+            self.time_series_data[key].append(value)
+        # print(self.time_series_data)
+
+    def get(self):
+        return self.time_series_data
+
+
+def dashboard(rocket):
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -26,24 +53,20 @@ def dashboard(q):
         )
     )
 
+    rocketo_proxy = rocket
+
     @app.callback(
         Output("live-update-graph", "figure"),
         Input("interval-component", "n_intervals"),
     )
-    def update_graph_live(q):
-        try:
-            new_data = q.get(timeout=0.1)
-            d["Time"].append(new_data["Time"])
-            d["Altitude"].append(new_data["Altitude"])
-            d["Velocity"].append(new_data["Velocity"])
-        except Empty:
-            pass
+    def update_graph_live(n):
+        data = rocketo_proxy.get()
 
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(
-                x=d["Time"],
-                y=d["Altitude"],
+                x=data["Time"],
+                y=data["Altitude"],
                 mode="lines+markers",
                 name="Altitude",
                 hoverinfo="none",
@@ -51,8 +74,8 @@ def dashboard(q):
         )
         fig.add_trace(
             go.Scatter(
-                x=d["Time"],
-                y=d["Velocity"],
+                x=data["Time"],
+                y=data["Velocity"],
                 mode="lines+markers",
                 name="Velocity",
                 hoverinfo="none",
@@ -69,10 +92,12 @@ def dashboard(q):
             hovermode="closest",
         )
 
-    app.run_server(debug=True)
+        return fig
+
+    app.run_server(debug=True, port=8055)
 
 
-def add_values(q):
+def add_values(rocket):
     def update_state(elapsed_time):
         if elapsed_time <= 5:
             velocity = 50 * elapsed_time
@@ -87,6 +112,7 @@ def add_values(q):
                 velocity = 0
         return altitude, velocity
 
+    # pprint(vars(rocket))
     start_time = time.time()
     while time.time() - start_time <= 15:
         elapsed_time = time.time() - start_time
@@ -96,21 +122,19 @@ def add_values(q):
             "Altitude": new_alt,
             "Velocity": new_velo,
         }
-        for key, value in new_data.items():
-            q[key].append(value)
-            print("did it")
+        rocket.set(new_data)
         time.sleep(0.1)  # simulating one-second interval
 
 
 if __name__ == "__main__":
-    manager = multiprocessing.Manager()
-    d = manager.dict()
-    d["Time"] = []
-    d["Altitude"] = []
-    d["Velocity"] = []
+    BaseManager.register("DummyRocket", DummyRocket)
+    manager = BaseManager()
+    manager.start()
+    inst = manager.DummyRocket()
 
-    p1 = multiprocessing.Process(target=add_values, args=(d,))
-    p2 = multiprocessing.Process(target=dashboard, args=(d,))
+    p1 = multiprocessing.Process(target=add_values, args=[inst])
+    time.sleep(3)
+    p2 = multiprocessing.Process(target=dashboard, args=[inst])
 
     p1.start()
     p2.start()
