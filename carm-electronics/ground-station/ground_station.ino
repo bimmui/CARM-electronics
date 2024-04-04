@@ -14,7 +14,6 @@
 #include <RH_RF95.h>
 
 RFM69 radio;
-SQLite db("rocket_data.db");
 
 void setup()
 {
