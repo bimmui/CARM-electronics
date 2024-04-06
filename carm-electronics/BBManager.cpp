@@ -12,6 +12,7 @@
 
 #include "BBManager.h"
 #include "def.h"
+#include "utils.h"
 
 static const unsigned MAX_ATTEMPTS = 20;
 
@@ -31,14 +32,50 @@ BBManager::BBManager()
     bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
     // bool gps_setup = setupGPS(GPS);
     bool sd_setup = setupSD();
+    errors_bitmask = 0;
 
     File init_info = SD.open("init.txt", FILE_WRITE);
     if (init_info)
     {
-        (imu_setup) ? (init_info.println("IMU successfully set up")) : (init_info.println("IMU unsuccessfully set up"));
-        (bmp_setup) ? (init_info.println("BMP successfully set up")) : (init_info.println("BMP unsuccessfully set up"));
-        (temp_setup1) ? (init_info.println("External temp. successfully set up")) : (init_info.println("External temp. unsuccessfully set up"));
-        (temp_setup2) ? (init_info.println("Avionics bay temp. successfully set up")) : (init_info.println("Avionics bay temp. unsuccessfully set up"));
+        if (imu_setup)
+        {
+            init_info.println("IMU successfully set up");
+        }
+        else
+        {
+            init_info.println("IMU unsuccessfully set up");
+            errors_bitmask = flip_bit(errors_bitmask, 2, 1);
+        }
+
+        if (bmp_setup)
+        {
+            init_info.println("BMP successfully set up");
+        }
+        else
+        {
+            init_info.println("BMP unsuccessfully set up");
+            errors_bitmask = flip_bit(errors_bitmask, 3, 1);
+        }
+
+        if (temp_setup1)
+        {
+            init_info.println("External temp. successfully set up");
+        }
+        else
+        {
+            init_info.println("External temp. unsuccessfully set up");
+            errors_bitmask = flip_bit(errors_bitmask, 4, 1);
+        }
+
+        if (temp_setup2)
+        {
+            init_info.println("Avionics bay temp. successfully set up");
+        }
+        else
+        {
+            init_info.println("Avionics bay temp. unsuccessfully set up");
+            errors_bitmask = flip_bit(errors_bitmask, 0, 1);
+        }
         init_info.println("----------------------------------------------------------------------------");
         init_info.close();
     }
@@ -134,17 +171,11 @@ void BBManager::readSensorData()
     // bmp reading
     if (!bmp.performReading())
     {
-        // old: just fill the struct with negative values here so it is clear that reading failed
-        // TODO: change this so that this is actually the max value that the bit field of these
-        //          can have. Pressure isnt being transmitted so idc what you do there, make sure the
-        //          value there is extraneous
-        // TODO: Write something that sets an error value for the barometer
-        pressure = -1111111;
-        altitude = -1111111;
+        pressure = 0;
+        altitude = 0;
     }
     else
     {
-        // TODO: Write something that get the temperature from the barometer
         pressure = bmp.pressure / 100.0;
         altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
     }

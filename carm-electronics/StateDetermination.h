@@ -14,6 +14,8 @@
 #ifndef STATE_DETERMINATION_H
 #define STATE_DETERMINATION_H
 
+#include <inttypes.h>
+
 // forward declaration
 class BBManager;
 
@@ -29,5 +31,6 @@ enum class state
 };
 
 void state_determiner(BBManager manager);
+state get_state_from_bits(uint64_t packet);
 
 #endif

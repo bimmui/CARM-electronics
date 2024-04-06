@@ -66,6 +66,20 @@ float convert_knots_to_mps(float knots)
     return knots * 0.514444;
 }
 
+uint16_t flip_bit(unsigned n, unsigned p, unsigned b)
+{
+    unsigned mask = 1 << p;
+    return ((n & ~mask) | (b << p));
+}
+
+bool check_bit(int n, int p)
+{
+    if (n & (1 << p))
+        return true;
+
+    return false;
+}
+
 void transmit(RH_RF95 rf96, uint64_t packet[], uint8_t packet_len)
 {
     uint64_t temp_packet[packet_len];

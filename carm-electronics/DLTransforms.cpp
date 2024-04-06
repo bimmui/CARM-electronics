@@ -11,6 +11,7 @@
  **************************************************************/
 
 #include "DLTransforms.h"
+#include "struct_file.h"
 
 const float EXT_TEMP_SPACING = 0.0683927699072;
 const float INT_TEMP_SPACING = 0.0620420127015;
@@ -61,7 +62,7 @@ unsigned int *transform_poweron(BBManager bbman)
   transformed_values[5] = static_cast<unsigned int>(bbman.gps_fix);
   transformed_values[6] = static_cast<unsigned int>(bbman.gps_num_satellites);
   transformed_values[7] = static_cast<unsigned int>(bbman.gps_antenna_status);
-  transformed_values[8] = static_cast<unsigned int>(bbman.errors_bit_mask);
+  transformed_values[8] = static_cast<unsigned int>(bbman.errors_bitmask);
 
   return transformed_values;
 }
@@ -88,7 +89,7 @@ unsigned int *transform_launchready(BBManager bbman)
   // GPS LONGITUDE COORDINATE SIGN (pos or negative)
   transformed_values[2] = (bbman.gps_long > 0) ? 1 : ((bbman.gps_long < 0) ? 0 : 0); // if > 0, then set to 1, otherwise set to 0
 
-  // GPS LONGITUDE COORDINATES
+  // GPS LONGITUDE COORDINATES, making it positive if needed
   if (bbman.gps_long > 0)
   {
     transformed_values[3] = static_cast<unsigned int>(bbman.gps_long * 1000000);
@@ -360,4 +361,164 @@ unsigned int *transform_recovery(BBManager bbman)
   transformed_values[12] = static_cast<unsigned int>(bbman.gps_antenna_status);
 
   return transformed_values;
+}
+
+/*
+ * untransform_poweron
+ * Parameters: An array of unsigned ints that have gone through DLT
+ * Returns: A struct containing the data transmitted in the POWER ON state
+ * Purpose: Returns the true (lossy) sensor readings
+ * Notes: Follow guidelines of the POWER ON bitfield schema
+ *
+ */
+powerondata untransform_poweron(unsigned int *data)
+{
+  powerondata tempd_po;
+
+  tempd_po.curr_state = data[0];
+  tempd_po.external_temp = deserialize_dlt(data[1], -15, EXT_TEMP_SPACING);
+  tempd_po.temperature_engbay = deserialize_dlt(data[2], 0, INT_TEMP_SPACING);
+  tempd_po.temperature_avbay = deserialize_dlt(data[3], 0, INT_TEMP_SPACING);
+  tempd_po.gps_quality = data[4];
+  tempd_po.gps_fix = data[5];
+  tempd_po.gps_num_satellites = data[6];
+  tempd_po.gps_antenna_status = data[7];
+  tempd_po.failures = data[8];
+
+  return tempd_po;
+}
+
+launchreadydata untransform_launchready(unsigned int *data)
+{
+  launchreadydata tempd_lr;
+
+  tempd_lr.curr_state = data[0];
+  tempd_lr.gps_num_satellites = data[1];
+
+  if (data[2] > 1)
+  {
+    tempd_lr.gps_long = data[3]
+  }
+  else
+  {
+    tempd_lr.gps_long = data[3] * -1
+  }
+
+  if (data[4] > 1)
+  {
+    tempd_lr.gps_lat = data[5]
+  }
+  else
+  {
+    tempd_lr.gps_lat = data[5] * -1
+  }
+
+  tempd_lr.gyro_x = deserialize_dlt(data[6], -1440, GYRO_XY_SPACING);
+  tempd_lr.accel_y = deserialize_dlt(data[7], 0, ACCEL_XY_SPACING);
+  tempd_lr.gyro_y = deserialize_dlt(data[8], -1440, GYRO_XY_SPACING);
+  tempd_lr.vert_velo = deserialize_dlt(data[9], -50, VERT_VELO_SPACING);
+  tempd_lr.gyro_z = deserialize_dlt(data[10], -360, GYRO_Z_SPACING);
+  tempd_lr.accel_x = deserialize_dlt(data[11], 0, ACCEL_XY_SPACING);
+  tempd_lr.altitude = deserialize_dlt(data[12], 0, ALTITUDE_SPACING);
+  tempd_lr.gps_fix = data[13];
+  tempd_lr.external_temp = deserialize_dlt(data[14], -15, EXT_TEMP_SPACING);
+  tempd_lr.temperature_avbay = deserialize_dlt(data[15], 0, INT_TEMP_SPACING);
+  tempd_lr.accel_z = deserialize_dlt(data[16], -30, ACCEL_Z_SPACING);
+  tempd_lr.mag_x = deserialize_dlt(data[17], -5, MAG_FORCE_SPACING);
+  tempd_lr.mag_y = deserialize_dlt(data[18], -5, MAG_FORCE_SPACING);
+  tempd_lr.mag_z = deserialize_dlt(data[19], -5, MAG_FORCE_SPACING);
+  tempd_lr.failures = data[20];
+  tempd_lr.gps_speed = deserialize_dlt(data[21], 0, GPS_SPEED_SPACING);
+  tempd_lr.gps_altitude = deserialize_dlt(data[22], 0, ALTITUDE_SPACING);
+  tempd_lr.gps_quality = data[23];
+  tempd_lr.temperature_engbay = deserialize_dlt(data[24], 0, INT_TEMP_SPACING);
+  tempd_lr.gps_antenna_status = data[25];
+
+  return tempd_lr;
+}
+
+launchmodedata untransform_launchmode(unsigned int *data)
+{
+  launchmodedata tempd_lm;
+
+  tempd_lm.curr_state = data[0];
+  tempd_lm.gps_num_satellites = data[1];
+
+  if (data[2] > 1)
+  {
+    tempd_lr.gps_long = data[3]
+  }
+  else
+  {
+    tempd_lr.gps_long = data[3] * -1
+  }
+
+  if (data[4] > 1)
+  {
+    tempd_lr.gps_lat = data[5]
+  }
+  else
+  {
+    tempd_lr.gps_lat = data[5] * -1
+  }
+
+  tempd_lm.gyro_x = deserialize_dlt(data[6], -1440, GYRO_XY_SPACING);
+  tempd_lm.gps_altitude = deserialize_dlt(data[7], 0, ALTITUDE_SPACING);
+  tempd_lm.accel_x = deserialize_dlt(data[8], 0, ACCEL_XY_SPACING);
+  tempd_lm.gyro_y = deserialize_dlt(data[9], -1440, GYRO_XY_SPACING);
+  tempd_lm.timestamp = data[10];
+  tempd_lm.gyro_z = deserialize_dlt(data[11], -360, GYRO_Z_SPACING);
+  tempd_lm.altitude = deserialize_dlt(data[12], 0, ALTITUDE_SPACING);
+  tempd_lm.gps_antenna_status = data[13];
+  tempd_lm.external_temp = deserialize_dlt(data[14], -15, EXT_TEMP_SPACING);
+  tempd_lm.accel_y = deserialize_dlt(data[15], 0, ACCEL_XY_SPACING);
+  tempd_lm.temperature_avbay = deserialize_dlt(data[16], 0, INT_TEMP_SPACING);
+  tempd_lm.temperature_engbay = deserialize_dlt(data[17], 0, INT_TEMP_SPACING);
+  tempd_lm.accel_z = deserialize_dlt(data[18], -30, ACCEL_Z_SPACING);
+  tempd_lm.mag_x = deserialize_dlt(data[19], -5, MAG_FORCE_SPACING);
+  tempd_lm.mag_y = deserialize_dlt(data[20], -5, MAG_FORCE_SPACING);
+  tempd_lm.mag_z = deserialize_dlt(data[21], -5, MAG_FORCE_SPACING);
+  tempd_lm.failures = data[22];
+  tempd_lm.gps_speed = deserialize_dlt(data[23], 0, GPS_SPEED_SPACING);
+  tempd_lm.vert_velo = deserialize_dlt(data[24], -50, VERT_VELO_SPACING);
+  tempd_lm.gps_quality = data[25];
+  tempd_lm.gps_fix = data[26];
+
+  return tempd_lm;
+}
+
+recoverydata untransform_recovery(unsigned int *data)
+{
+  recoverydata tempd_r;
+
+  tempd_r.curr_state = data[0];
+  tempd_r.gps_num_satellites = data[1];
+
+  if (data[2] > 1)
+  {
+    tempd_r.gps_long = data[3]
+  }
+  else
+  {
+    tempd_r.gps_long = data[3] * -1
+  }
+
+  if (data[4] > 1)
+  {
+    tempd_r.gps_lat = data[5]
+  }
+  else
+  {
+    tempd_r.gps_lat = data[5] * -1
+  }
+
+  tempd_r.external_temp = deserialize_dlt(data[6], -15, EXT_TEMP_SPACING);
+  tempd_r.temperature_engbay = deserialize_dlt(data[7], 0, INT_TEMP_SPACING);
+  tempd_r.temperature_avbay = deserialize_dlt(data[8], 0, INT_TEMP_SPACING);
+  tempd_r.gps_fix = data[9];
+  tempd_r.failures = data[10];
+  tempd_r.gps_quality = data[11];
+  tempd_r.gps_antenna_status = data[12];
+
+  return tempd_r;
 }
