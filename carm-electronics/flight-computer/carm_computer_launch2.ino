@@ -95,7 +95,8 @@ void loop()
         unsigned int *poweron_d = transform_poweron(bboard_manager);
         uint64_t[1] poweron_word = {pack_poweron(poweron_d)};
         transmit(rf96, poweron_word, 1);
-        receive(rf96, 1) break;
+        receive(rf96, 1); 
+        break;
     }
     case state::LAUNCH_READY:
     {
@@ -105,6 +106,52 @@ void loop()
         receive(rf96, 1);
         break;
     }
+ 
+    case state::APOGEE_PHASE:
+    {
+        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
+        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
+        transmit(rf96,launchmode_words, 5);
+        receive(rf96, 1);
+        break;
+    }
+
+    case state::DROGUE_DEPLOYED:
+    {
+        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
+        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
+        transmit(rf96,launchmode_words, 5);
+        receive(rf96, 1);
+        break;
+    }
+
+    case state::MAIN_DEPLOY_ATTEMPT:
+    {
+        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
+        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
+        transmit(rf96,launchmode_words, 5);
+        receive(rf96, 1);
+        break;
+    }
+
+    case state::MAIN_DEPLOYED:
+    {
+        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
+        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
+        transmit(rf96,launchmode_words, 5);
+        receive(rf96, 1);
+        break;
+    }
+
+    case state::RECOVERY:
+    {
+        unsigned int *recovery_d = transform_recovery(bboard_manager);
+        uint64_t *recovery_words = pack_recovery(launchready_d);
+        transmit(rf96, recovery_words, 2);
+        receive(rf96, 1);
+        break;
+    }
+
     default:
         // code block
         break;
