@@ -1,9 +1,9 @@
 /**************************************************************
  *
- *                     carm_computer_launch1.ino
+ *                     carm_computer_launch2.ino
  *
  *     Author(s):  Daniel Opara
- *     Date:       1/6/2024
+ *     Date:       3/20/2024
  *
  *     Overview: Driver code for the rocket computer. Gets readings from the sensors
  *                  connected to it and writes it to an SD card.
@@ -23,9 +23,11 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Initializing revelant objects and structs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 BBManager bboard_manager = BBManager();
+StateDeterminer state_determiner = StateDeterminer();
 // Singleton instance of the radio driver
-RH_RF95 rf96(RFM96_CS, RFM96_INT);
+// RH_RF95 rf96(RFM96_CS, RFM96_INT);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
@@ -73,89 +75,14 @@ void switchSPI_device(int cs_pin);
 
 void setup()
 {
-
-    // pinMode(J1, OUTPUT);
-    // pinMode(J2, OUTPUT);
-
-    // Switch the spi device before setting up the SD card module
     switchSPI_device(SD_CS);
 }
 
 void loop()
 {
     bboard_manager.readSensorData();
-    state_determiner(bboard_manager);
-    switchSPI_device(SD_CS);
+    state_determiner.determineState(bboard_manager);
     bboard_manager.writeSensorData();
-    switchSPI_device(RFM96_CS);
-    switch (bboard_manager.curr_state)
-    {
-    case state::POWER_ON:
-    {
-        unsigned int *poweron_d = transform_poweron(bboard_manager);
-        uint64_t[1] poweron_word = {pack_poweron(poweron_d)};
-        transmit(rf96, poweron_word, 1);
-        receive(rf96, 1); 
-        break;
-    }
-    case state::LAUNCH_READY:
-    {
-        unsigned int *launchready_d = transform_launchready(bboard_manager);
-        uint64_t *launchready_words = pack_launchready(launchready_d);
-        transmit(rf96, launchready_words, 5);
-        receive(rf96, 1);
-        break;
-    }
- 
-    case state::APOGEE_PHASE:
-    {
-        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
-        transmit(rf96,launchmode_words, 5);
-        receive(rf96, 1);
-        break;
-    }
-
-    case state::DROGUE_DEPLOYED:
-    {
-        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
-        transmit(rf96,launchmode_words, 5);
-        receive(rf96, 1);
-        break;
-    }
-
-    case state::MAIN_DEPLOY_ATTEMPT:
-    {
-        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
-        transmit(rf96,launchmode_words, 5);
-        receive(rf96, 1);
-        break;
-    }
-
-    case state::MAIN_DEPLOYED:
-    {
-        unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-        uint64_t *launchmode_words = pack_launchmode(launchmode_d);
-        transmit(rf96,launchmode_words, 5);
-        receive(rf96, 1);
-        break;
-    }
-
-    case state::RECOVERY:
-    {
-        unsigned int *recovery_d = transform_recovery(bboard_manager);
-        uint64_t *recovery_words = pack_recovery(launchready_d);
-        transmit(rf96, recovery_words, 2);
-        receive(rf96, 1);
-        break;
-    }
-
-    default:
-        // code block
-        break;
-    }
 }
 
 /*

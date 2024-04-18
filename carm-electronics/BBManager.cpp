@@ -18,21 +18,25 @@ static const unsigned MAX_ATTEMPTS = 20;
 
 /*
  * BBManager constructor
- * Parameters: All the objects that correspond to their respective breakout boards
- * Purpose: Sets up all the sensors with their proper configurations and writes to disk
- *              which ones are were successfully set up and which ones weren't
- * Notes: None
+ * Parameters: None
+ * Purpose: Sets up all the sensors with their proper configurations
+ * Notes: Writes to disk which sensors were successfully set up and which ones weren't
  *
  */
 BBManager::BBManager()
 {
+    // set up the class vars
+    curr_state = state::POWER_ON;
+    failure_flags = 0;
+    curr_launch_time = 0;
+
     bool imu_setup = setupSensorIMU(lsm);
     bool bmp_setup = setupSensorBMP(bmp);
     bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
     bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
     // bool gps_setup = setupGPS(GPS);
     bool sd_setup = setupSD();
-    errors_bitmask = 0;
+    failure_flags = 0;
 
     File init_info = SD.open("init.txt", FILE_WRITE);
     if (init_info)
@@ -44,7 +48,7 @@ BBManager::BBManager()
         else
         {
             init_info.println("IMU unsuccessfully set up");
-            errors_bitmask = flip_bit(errors_bitmask, 2, 1);
+            failure_flags = flip_bit(failure_flags, 2, 1);
         }
 
         if (bmp_setup)
@@ -54,7 +58,7 @@ BBManager::BBManager()
         else
         {
             init_info.println("BMP unsuccessfully set up");
-            errors_bitmask = flip_bit(errors_bitmask, 3, 1);
+            failure_flags = flip_bit(failure_flags, 3, 1);
         }
 
         if (temp_setup1)
@@ -64,7 +68,7 @@ BBManager::BBManager()
         else
         {
             init_info.println("External temp. unsuccessfully set up");
-            errors_bitmask = flip_bit(errors_bitmask, 4, 1);
+            failure_flags = flip_bit(failure_flags, 4, 1);
         }
 
         if (temp_setup2)
@@ -74,7 +78,7 @@ BBManager::BBManager()
         else
         {
             init_info.println("Avionics bay temp. unsuccessfully set up");
-            errors_bitmask = flip_bit(errors_bitmask, 0, 1);
+            failure_flags = flip_bit(failure_flags, 0, 1);
         }
         init_info.println("----------------------------------------------------------------------------");
         init_info.close();
@@ -90,19 +94,23 @@ BBManager::BBManager()
         launch_data.print(",");
         launch_data.print("av bay temperature (C)"); // in Celcius
         launch_data.print(",");
-        launch_data.print("altimeter temp (C)"); // in Celcius
+        launch_data.print("barometer temp (C)"); // in Celcius
         launch_data.print(",");
         launch_data.print("air pressure (kPa)"); // in kiloPascals
         launch_data.print(",");
         launch_data.print("altitude (m)"); // in meters
         launch_data.print(",");
-        launch_data.print("vertical velocity (m/s)"); // in Celcius
+        launch_data.print("kf vertical velocity (m/s)"); // in m/s
         launch_data.print(",");
-        launch_data.print("x acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print("kf vertical acceleration (m/s^2)"); // in m/s^2
         launch_data.print(",");
-        launch_data.print("y acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print("kf altitude (m)"); // in m
         launch_data.print(",");
-        launch_data.print("z acceleration (m/s^2)"); // in meters per sec^2
+        launch_data.print("x acceleration (m/s^2)"); // in m/s^2
+        launch_data.print(",");
+        launch_data.print("y acceleration (m/s^2)"); // in m/s^2
+        launch_data.print(",");
+        launch_data.print("z acceleration (m/s^2)"); // in m/s^2
         launch_data.print(",");
         launch_data.print("x magnetic force (gauss)"); // in gauss
         launch_data.print(",");
@@ -143,9 +151,8 @@ BBManager::BBManager()
  * BBManager destructor
  * Parameters: None
  * Returns: Nothing
- * Purpose: Cleans up mem of BBManager objects
+ * Purpose: Cleans up mem of BBManager class variables
  * Notes: None
- *
  */
 BBManager::~BBManager()
 {
@@ -193,8 +200,6 @@ void BBManager::readSensorData()
     gyro_z = g.gyro.z;
 
     // TODO: Add code that gets readings from the GPS
-
-    // TODO: Add kalman filtering code that calculates vertical velocity
 }
 
 /*
@@ -212,25 +217,23 @@ void BBManager::writeSensorData()
         // could use static_cast<std::underlying_type_t<state>> to make it more general purpose but we know it's an int
         launch_data.print(static_cast<int>(curr_state));
         launch_data.print(",");
-        if (curr_state == state::POWER_ON)
-        {
-            launch_data.print(0);
-        }
-        else
-        {
-            launch_data.print(curr_launch_time);
-        }
         launch_data.print(curr_launch_time);
         launch_data.print(",");
-        launch_data.print(temperature_avbay);
+        launch_data.print(external_temp);
         launch_data.print(",");
         launch_data.print(temperature_engbay);
         launch_data.print(",");
-        launch_data.print(altimeter_temp);
+        launch_data.print(barometer_temp);
         launch_data.print(",");
         launch_data.print(pressure);
         launch_data.print(",");
         launch_data.print(altitude);
+        launch_data.print(",");
+        launch_data.print(k_vert_velocity);
+        launch_data.print(",");
+        launch_data.print(k_vert_acceleration);
+        launch_data.print(",");
+        launch_data.print(k_altitude);
         launch_data.print(",");
         launch_data.print(accel_x);
         launch_data.print(",");
@@ -267,6 +270,8 @@ void BBManager::writeSensorData()
         launch_data.print(gps_num_satellites);
         launch_data.print(",");
         launch_data.println(gps_antenna_status);
+        launch_data.print(",");
+        launch_data.println(failure_flags);
         launch_data.close();
     }
     else

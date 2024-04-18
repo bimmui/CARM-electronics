@@ -103,8 +103,14 @@ uint64_t *receive(RH_RF95 rf96, uint8_t packet_len)
         }
         else
         {
-            static uint64_t fail[1] = {0};
+            static uint64_t fail[0] = {1};
             return fail;
         }
     }
+}
+
+state get_state_from_bits(uint64_t packet)
+{
+    state extracted_state = Bitpack_getu(packet, 4, 60);
+    return extracted_state;
 }

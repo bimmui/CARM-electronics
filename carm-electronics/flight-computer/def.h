@@ -42,6 +42,6 @@
 // BMP_CS == CS
 #define BMP_CS 17
 #define SEALEVELPRESSURE_HPA (1013.25)
-#define SD_CS 13
+#define SD_CS 25
 #define GPSSerial Serial1
 #define GPSECHO false

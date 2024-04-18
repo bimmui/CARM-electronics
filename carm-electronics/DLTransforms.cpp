@@ -24,12 +24,29 @@ const float GYRO_XY_SPACING = 0.0027465846506;
 const float GYRO_Z_SPACING = 0.00549320597234;
 const float GPS_SPEED_SPACING = 0.0999481185339;
 
+/*
+ * serialize_dlt
+ * Parameters: Number of bits to allocate for a data field, minimum value range for the data field,
+ *              maximum data value for the data field, the actual sensor reading, and the DLT spacing for
+ *              the data field, respectively
+ * Returns: The transformed value of the sensor reading; what the sensor reading is in DLT space
+ * Purpose: Transforms sensor readings into unsigned integers that exist in DLT space
+ * Notes: Please read the transmission protocol for more details on how this works
+ */
 unsigned int serialize_dlt(unsigned int bit_count, int n_min, int n_max, float reading, float m_spacing)
 {
   unsigned int serialized_data = floor((reading - n_min) / m_spacing);
   return serialized_data;
 }
 
+/*
+ * deserialize_dlt
+ * Parameters: A value that exists in DLT space, minimum value range for the data field, and
+ *              the DLT spacing for the data field, respectively
+ * Returns: The true (lossy) sensor readings
+ * Purpose: Restores float sensor readings from DLT transformed values
+ * Notes: Please read the transmission protocol for more details on how this works
+ */
 float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 {
   float deserialized_data = ((serialized * m_spacing) + n_min);
@@ -38,16 +55,17 @@ float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 
 /*!
  * BIG TODO: CHECK IF THE EXPLICIT CASTING IS NEEDED FOR THE FUNCS BELOW!!
- *
  */
 
 /*
  * transform_poweron
- * Parameters: An array of unsigned ints that have gone through DLT
+ * Parameters: A BBManager object
  * Returns: A array of unsigned ints
- * Purpose: Packs the transformed data into 64 bit word(s)
- * Notes: Follow guidelines of the POWER ON bitfield schema
- *
+ * Notes:
+ *      - Follow guidelines of the POWER ON bitfield schema,
+ *      - Some fields don't need to undergo DLT and simply need to
+ *            be recasted
+ *      - The BBManager object is used to get current sensor readings
  */
 unsigned int *transform_poweron(BBManager bbman)
 {
@@ -62,18 +80,20 @@ unsigned int *transform_poweron(BBManager bbman)
   transformed_values[5] = static_cast<unsigned int>(bbman.gps_fix);
   transformed_values[6] = static_cast<unsigned int>(bbman.gps_num_satellites);
   transformed_values[7] = static_cast<unsigned int>(bbman.gps_antenna_status);
-  transformed_values[8] = static_cast<unsigned int>(bbman.errors_bitmask);
+  transformed_values[8] = static_cast<unsigned int>(bbman.failure_flags);
 
   return transformed_values;
 }
 
 /*
  * transform_launchready
- * Parameters: An array of unsigned ints that have gone through DLT
+ * Parameters: A BBManager object
  * Returns: A array of unsigned ints
- * Purpose: Packs the transformed data into 64 bit word(s)
- * Notes: Follow guidelines of the LAUNCH READY bitfield schema
- *
+ * Notes:
+ *      - Follow guidelines of the LAUNCH READY bitfield schema,
+ *      - Some fields don't need to undergo DLT and simply need to
+ *            be recasted
+ *      - The BBManager object is used to get current sensor readings
  */
 unsigned int *transform_launchready(BBManager bbman)
 {
@@ -185,11 +205,13 @@ unsigned int *transform_launchready(BBManager bbman)
 
 /*
  * transform_launchmode
- * Parameters: An array of unsigned ints that have gone through DLT
+ * Parameters: A BBManager object
  * Returns: A array of unsigned ints
- * Purpose: Packs the transformed data into 64 bit word(s)
- * Notes: Follow guidelines of the LAUNCH MODE bitfield schema
- *
+ * Notes:
+ *      - Follow guidelines of the LAUNCH MODE bitfield schema,
+ *      - Some fields don't need to undergo DLT and simply need to
+ *            be recasted
+ *      - The BBManager object is used to get current sensor readings
  */
 unsigned int *transform_launchmode(BBManager bbman)
 {
@@ -304,11 +326,13 @@ unsigned int *transform_launchmode(BBManager bbman)
 
 /*
  * transform_recovery
- * Parameters: An array of unsigned ints that have gone through DLT
+ * Parameters: A BBManager object
  * Returns: A array of unsigned ints
- * Purpose: Packs the transformed data into 64 bit word(s)
- * Notes: Follow guidelines of the RECOVERY MODE bitfield schema
- *
+ * Notes:
+ *      - Follow guidelines of the RECOVERY bitfield schema,
+ *      - Some fields don't need to undergo DLT and simply need to
+ *            be recasted
+ *      - The BBManager object is used to get current sensor readings
  */
 unsigned int *transform_recovery(BBManager bbman)
 {
@@ -369,7 +393,6 @@ unsigned int *transform_recovery(BBManager bbman)
  * Returns: A struct containing the data transmitted in the POWER ON state
  * Purpose: Returns the true (lossy) sensor readings
  * Notes: Follow guidelines of the POWER ON bitfield schema
- *
  */
 powerondata untransform_poweron(unsigned int *data)
 {
@@ -388,6 +411,13 @@ powerondata untransform_poweron(unsigned int *data)
   return tempd_po;
 }
 
+/*
+ * untransform_launchready
+ * Parameters: An array of unsigned ints that have gone through DLT
+ * Returns: A struct containing the data transmitted in the LAUNCH READY state
+ * Purpose: Returns the true (lossy) sensor readings
+ * Notes: Follow guidelines of the LAUNCH READY bitfield schema
+ */
 launchreadydata untransform_launchready(unsigned int *data)
 {
   launchreadydata tempd_lr;
@@ -437,6 +467,13 @@ launchreadydata untransform_launchready(unsigned int *data)
   return tempd_lr;
 }
 
+/*
+ * untransform_launchmode
+ * Parameters: An array of unsigned ints that have gone through DLT
+ * Returns: A struct containing the data transmitted in the LAUNCH MODE state
+ * Purpose: Returns the true (lossy) sensor readings
+ * Notes: Follow guidelines of the LAUNCH MODE bitfield schema
+ */
 launchmodedata untransform_launchmode(unsigned int *data)
 {
   launchmodedata tempd_lm;
@@ -487,6 +524,13 @@ launchmodedata untransform_launchmode(unsigned int *data)
   return tempd_lm;
 }
 
+/*
+ * untransform_recovery
+ * Parameters: An array of unsigned ints that have gone through DLT
+ * Returns: A struct containing the data transmitted in the RECOVERY state
+ * Purpose: Returns the true (lossy) sensor readings
+ * Notes: Follow guidelines of the RECOVERY bitfield schema
+ */
 recoverydata untransform_recovery(unsigned int *data)
 {
   recoverydata tempd_r;

@@ -37,10 +37,15 @@ public:
     float temperature_avbay;
     float temperature_engbay;
     float external_temp;
-    float altimeter_temp;
+    float barometer_temp;
     float pressure;
     float altitude;
-    float vert_velocity;
+
+    // kalman filtered values
+    float k_vert_velocity;
+    float k_vert_acceleration;
+    float k_altitude;
+
     float accel_x;
     float accel_y;
     float accel_z;
@@ -60,7 +65,7 @@ public:
     int gps_num_satellites;
     int gps_antenna_status;
     state curr_state;
-    uint16_t errors_bitmask;
+    uint16_t failure_flags;
     // TODO: make functions that edit the bit mask whenever an error occurs
 
 private:
