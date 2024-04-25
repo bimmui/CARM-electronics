@@ -17,6 +17,16 @@
 static const unsigned MAX_ATTEMPTS = 20;
 
 /*
+ * setupSensorIMU
+ * Parameters: Reference (pointer) to the instantiated IMU sensor object
+ * Purpose: Sets up the range at which the sensor's individual components measure
+ *           higher ranges = less precision but can measure larger movements
+ * Returns: Bool representing whether or not sensor was set up
+ * Notes: The sensor was set up in I2C. For more info, read the device documentation:
+ *            https://learn.adafruit.com/adafruit-lsm9ds1-accelerometer-plus-gyro-plus-magnetometer-9-dof-breakout/overview
+ */
+
+/*
  * BBManager constructor
  * Parameters: None
  * Purpose: Sets up all the sensors with their proper configurations
@@ -29,121 +39,71 @@ BBManager::BBManager()
     curr_state = state::POWER_ON;
     failure_flags = 0;
     curr_launch_time = 0;
+}
 
-    bool imu_setup = setupSensorIMU(lsm);
-    bool bmp_setup = setupSensorBMP(bmp);
-    bool temp_setup1 = setupSensorTemp(tempsensor_avbay, 0x18);
-    bool temp_setup2 = setupSensorTemp(tempsensor_engbay, 0x19);
-    // bool gps_setup = setupGPS(GPS);
-    bool sd_setup = setupSD();
-    failure_flags = 0;
-
-    File init_info = SD.open("init.txt", FILE_WRITE);
-    if (init_info)
+void BBManager::initDatalog(File &file_stream)
+{
+    file_stream = SD.open("datalog.csv", FILE_WRITE);
+    if (file_stream)
     {
-        if (imu_setup)
-        {
-            init_info.println("IMU successfully set up");
-        }
-        else
-        {
-            init_info.println("IMU unsuccessfully set up");
-            failure_flags = flip_bit(failure_flags, 2, 1);
-        }
-
-        if (bmp_setup)
-        {
-            init_info.println("BMP successfully set up");
-        }
-        else
-        {
-            init_info.println("BMP unsuccessfully set up");
-            failure_flags = flip_bit(failure_flags, 3, 1);
-        }
-
-        if (temp_setup1)
-        {
-            init_info.println("External temp. successfully set up");
-        }
-        else
-        {
-            init_info.println("External temp. unsuccessfully set up");
-            failure_flags = flip_bit(failure_flags, 4, 1);
-        }
-
-        if (temp_setup2)
-        {
-            init_info.println("Avionics bay temp. successfully set up");
-        }
-        else
-        {
-            init_info.println("Avionics bay temp. unsuccessfully set up");
-            failure_flags = flip_bit(failure_flags, 0, 1);
-        }
-        init_info.println("----------------------------------------------------------------------------");
-        init_info.close();
-    }
-    launch_data = SD.open("datalog.csv", FILE_WRITE);
-    if (launch_data)
-    {
-        launch_data.print("STATE");
-        launch_data.print(",");
-        launch_data.print("time (ms)");
-        launch_data.print(",");
-        launch_data.print("external temperature (C)"); // in Celcius
-        launch_data.print(",");
-        launch_data.print("av bay temperature (C)"); // in Celcius
-        launch_data.print(",");
-        launch_data.print("barometer temp (C)"); // in Celcius
-        launch_data.print(",");
-        launch_data.print("air pressure (kPa)"); // in kiloPascals
-        launch_data.print(",");
-        launch_data.print("altitude (m)"); // in meters
-        launch_data.print(",");
-        launch_data.print("kf vertical velocity (m/s)"); // in m/s
-        launch_data.print(",");
-        launch_data.print("kf vertical acceleration (m/s^2)"); // in m/s^2
-        launch_data.print(",");
-        launch_data.print("kf altitude (m)"); // in m
-        launch_data.print(",");
-        launch_data.print("x acceleration (m/s^2)"); // in m/s^2
-        launch_data.print(",");
-        launch_data.print("y acceleration (m/s^2)"); // in m/s^2
-        launch_data.print(",");
-        launch_data.print("z acceleration (m/s^2)"); // in m/s^2
-        launch_data.print(",");
-        launch_data.print("x magnetic force (gauss)"); // in gauss
-        launch_data.print(",");
-        launch_data.print("y magnetic force (gauss)"); // in gauss
-        launch_data.print(",");
-        launch_data.print("z magnetic force (gauss)"); // in gauss
-        launch_data.print(",");
-        launch_data.print("x gyro (dps)"); // in degrees per sec
-        launch_data.print(",");
-        launch_data.print("y gyro (dps)"); // in degrees per sec
-        launch_data.print(",");
-        launch_data.print("z gyro (dps)"); // in degrees per sec
-        launch_data.print(",");
-        launch_data.print("gps lat");
-        launch_data.print(",");
-        launch_data.print("gps long");
-        launch_data.print(",");
-        launch_data.print("gps speed");
-        launch_data.print(",");
-        launch_data.print("gps angle");
-        launch_data.print(",");
-        launch_data.print("gps altitude");
-        launch_data.print(",");
-        launch_data.print("gps fix");
-        launch_data.print(",");
-        launch_data.print("gps fix quality");
-        launch_data.print(",");
-        launch_data.print("gps satellites");
-        launch_data.print(",");
-        launch_data.println("gps antenna status");
-        launch_data.print(",");
-        launch_data.println("error flags");
-        launch_data.close();
+        file_stream.print("STATE");
+        file_stream.print(",");
+        file_stream.print("time (ms)");
+        file_stream.print(",");
+        file_stream.print("external temperature (C)"); // in Celcius
+        file_stream.print(",");
+        file_stream.print("av bay temperature (C)"); // in Celcius
+        file_stream.print(",");
+        file_stream.print("barometer temp (C)"); // in Celcius
+        file_stream.print(",");
+        file_stream.print("air pressure (kPa)"); // in kiloPascals
+        file_stream.print(",");
+        file_stream.print("altitude (m)"); // in meters
+        file_stream.print(",");
+        file_stream.print("kf vertical velocity (m/s)"); // in m/s
+        file_stream.print(",");
+        file_stream.print("kf vertical acceleration (m/s^2)"); // in m/s^2
+        file_stream.print(",");
+        file_stream.print("kf altitude (m)"); // in m
+        file_stream.print(",");
+        file_stream.print("x acceleration (m/s^2)"); // in m/s^2
+        file_stream.print(",");
+        file_stream.print("y acceleration (m/s^2)"); // in m/s^2
+        file_stream.print(",");
+        file_stream.print("z acceleration (m/s^2)"); // in m/s^2
+        file_stream.print(",");
+        file_stream.print("x magnetic force (gauss)"); // in gauss
+        file_stream.print(",");
+        file_stream.print("y magnetic force (gauss)"); // in gauss
+        file_stream.print(",");
+        file_stream.print("z magnetic force (gauss)"); // in gauss
+        file_stream.print(",");
+        file_stream.print("x gyro (dps)"); // in degrees per sec
+        file_stream.print(",");
+        file_stream.print("y gyro (dps)"); // in degrees per sec
+        file_stream.print(",");
+        file_stream.print("z gyro (dps)"); // in degrees per sec
+        file_stream.print(",");
+        file_stream.print("gps lat");
+        file_stream.print(",");
+        file_stream.print("gps long");
+        file_stream.print(",");
+        file_stream.print("gps speed");
+        file_stream.print(",");
+        file_stream.print("gps angle");
+        file_stream.print(",");
+        file_stream.print("gps altitude");
+        file_stream.print(",");
+        file_stream.print("gps fix");
+        file_stream.print(",");
+        file_stream.print("gps fix quality");
+        file_stream.print(",");
+        file_stream.print("gps satellites");
+        file_stream.print(",");
+        file_stream.print("gps antenna status");
+        file_stream.print(",");
+        file_stream.println("error flags");
+        file_stream.close();
     }
 }
 
@@ -159,6 +119,17 @@ BBManager::~BBManager()
     // some instructions
 }
 
+void BBManager::setSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
+                           Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2,
+                           Adafruit_GPS &gps_obj)
+{
+    lsm = &lsm_obj;
+    bmp = &bmp_obj;
+    tempsensor_avbay = &tempsensor_obj1;
+    tempsensor_engbay = &tempsensor_obj2;
+    gps = &gps_obj;
+}
+
 /*
  * readSensorData
  * Parameters: None
@@ -169,26 +140,26 @@ BBManager::~BBManager()
 void BBManager::readSensorData()
 {
     // imu reading
-    lsm.read();
+    lsm->read();
     sensors_event_t a, m, g, temp;
-    lsm.getEvent(&a, &m, &g, &temp);
+    lsm->getEvent(&a, &m, &g, &temp);
 
     curr_launch_time = millis() - launch_start_time;
 
     // bmp reading
-    if (!bmp.performReading())
+    if (!bmp->performReading())
     {
         pressure = 0;
         altitude = 0;
     }
     else
     {
-        pressure = bmp.pressure / 100.0;
-        altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+        pressure = bmp->pressure / 100.0;
+        altitude = bmp->readAltitude(SEALEVELPRESSURE_HPA);
     }
 
-    temperature_avbay = tempsensor_avbay.readTempC();
-    temperature_engbay = tempsensor_engbay.readTempC();
+    temperature_avbay = tempsensor_avbay->readTempC();
+    temperature_engbay = tempsensor_engbay->readTempC();
     accel_x = a.acceleration.x;
     accel_y = a.acceleration.y;
     accel_z = a.acceleration.z;
@@ -209,113 +180,82 @@ void BBManager::readSensorData()
  * Returns: Nothing
  * Notes: None
  */
-void BBManager::writeSensorData()
+void BBManager::writeSensorData(File &data_stream, File &error_stream)
 {
-    launch_data = SD.open("datalog.csv", FILE_WRITE);
-    if (launch_data)
+    data_stream = SD.open("datalog.csv", FILE_WRITE);
+    if (data_stream)
     {
         // could use static_cast<std::underlying_type_t<state>> to make it more general purpose but we know it's an int
-        launch_data.print(static_cast<int>(curr_state));
-        launch_data.print(",");
-        launch_data.print(curr_launch_time);
-        launch_data.print(",");
-        launch_data.print(external_temp);
-        launch_data.print(",");
-        launch_data.print(temperature_engbay);
-        launch_data.print(",");
-        launch_data.print(barometer_temp);
-        launch_data.print(",");
-        launch_data.print(pressure);
-        launch_data.print(",");
-        launch_data.print(altitude);
-        launch_data.print(",");
-        launch_data.print(k_vert_velocity);
-        launch_data.print(",");
-        launch_data.print(k_vert_acceleration);
-        launch_data.print(",");
-        launch_data.print(k_altitude);
-        launch_data.print(",");
-        launch_data.print(accel_x);
-        launch_data.print(",");
-        launch_data.print(accel_y);
-        launch_data.print(",");
-        launch_data.print(accel_z);
-        launch_data.print(",");
-        launch_data.print(mag_x);
-        launch_data.print(",");
-        launch_data.print(mag_y);
-        launch_data.print(",");
-        launch_data.print(mag_z);
-        launch_data.print(",");
-        launch_data.print(gyro_x);
-        launch_data.print(",");
-        launch_data.print(gyro_y);
-        launch_data.print(",");
-        launch_data.print(gyro_z);
-        launch_data.print(",");
-        launch_data.print(gps_lat);
-        launch_data.print(",");
-        launch_data.print(gps_long);
-        launch_data.print(",");
-        launch_data.print(gps_speed);
-        launch_data.print(",");
-        launch_data.print(gps_angle);
-        launch_data.print(",");
-        launch_data.print(gps_altitude);
-        launch_data.print(",");
-        launch_data.print(gps_fix);
-        launch_data.print(",");
-        launch_data.print(gps_quality);
-        launch_data.print(",");
-        launch_data.print(gps_num_satellites);
-        launch_data.print(",");
-        launch_data.println(gps_antenna_status);
-        launch_data.print(",");
-        launch_data.println(failure_flags);
-        launch_data.close();
+        data_stream.print(static_cast<int>(curr_state));
+        data_stream.print(",");
+        data_stream.print(curr_launch_time);
+        data_stream.print(",");
+        data_stream.print(external_temp);
+        data_stream.print(",");
+        data_stream.print(temperature_engbay);
+        data_stream.print(",");
+        data_stream.print(barometer_temp);
+        data_stream.print(",");
+        data_stream.print(pressure);
+        data_stream.print(",");
+        data_stream.print(altitude);
+        data_stream.print(",");
+        data_stream.print(k_vert_velocity);
+        data_stream.print(",");
+        data_stream.print(k_vert_acceleration);
+        data_stream.print(",");
+        data_stream.print(k_altitude);
+        data_stream.print(",");
+        data_stream.print(accel_x);
+        data_stream.print(",");
+        data_stream.print(accel_y);
+        data_stream.print(",");
+        data_stream.print(accel_z);
+        data_stream.print(",");
+        data_stream.print(mag_x);
+        data_stream.print(",");
+        data_stream.print(mag_y);
+        data_stream.print(",");
+        data_stream.print(mag_z);
+        data_stream.print(",");
+        data_stream.print(gyro_x);
+        data_stream.print(",");
+        data_stream.print(gyro_y);
+        data_stream.print(",");
+        data_stream.print(gyro_z);
+        data_stream.print(",");
+        data_stream.print(gps_lat);
+        data_stream.print(",");
+        data_stream.print(gps_long);
+        data_stream.print(",");
+        data_stream.print(gps_speed);
+        data_stream.print(",");
+        data_stream.print(gps_angle);
+        data_stream.print(",");
+        data_stream.print(gps_altitude);
+        data_stream.print(",");
+        data_stream.print(gps_fix);
+        data_stream.print(",");
+        data_stream.print(gps_quality);
+        data_stream.print(",");
+        data_stream.print(gps_num_satellites);
+        data_stream.print(",");
+        data_stream.print(gps_antenna_status);
+        data_stream.print(",");
+        data_stream.println(failure_flags);
+        data_stream.close();
     }
     else
     {
-        error_data = SD.open("errlog.txt", FILE_WRITE);
-        if (error_data)
+        error_stream = SD.open("errlog.txt", FILE_WRITE);
+        if (error_stream)
         {
-            error_data.print(curr_launch_time);
-            error_data.print(": ");
-            error_data.println("Error logging flight data");
-            error_data.close();
+            error_stream.print(curr_launch_time);
+            error_stream.print(": ");
+            error_stream.println("Error logging flight data");
+            error_stream.close();
         }
     }
-}
-
-/*
- * setupSensorIMU
- * Parameters: Reference (pointer) to the instantiated IMU sensor object
- * Purpose: Sets up the range at which the sensor's individual components measure
- *           higher ranges = less precision but can measure larger movements
- * Returns: Bool representing whether or not sensor was set up
- * Notes: The sensor was set up in I2C. For more info, read the device documentation:
- *            https://learn.adafruit.com/adafruit-lsm9ds1-accelerometer-plus-gyro-plus-magnetometer-9-dof-breakout/overview
- */
-bool BBManager::setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
-{
-    Serial.println("Setting up IMU...");
-    for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
-    {
-        if (!lsm_obj.begin())
-        {
-            Serial.println("Failed to communicate with LSM9DS1.");
-        }
-        else
-        {
-            lsm_obj.setupAccel(lsm_obj.LSM9DS1_ACCELRANGE_2G);
-            lsm_obj.setupMag(lsm_obj.LSM9DS1_MAGGAIN_4GAUSS);
-            lsm_obj.setupGyro(lsm_obj.LSM9DS1_GYROSCALE_245DPS);
-            Serial.println("Complete!");
-            return true;
-        }
-        delay(2000);
-    }
-    return false;
 }
 
 /*
@@ -327,29 +267,24 @@ bool BBManager::setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
  * Notes: The sensor was set up in I2C. For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-bmp388-bmp390-bmp3xx/overview
  */
-bool BBManager::setupSensorBMP(Adafruit_BMP3XX &bmp_obj)
-{
-    Serial.println("Setting up barometric pressure sensor...");
-    for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
-    {
-        if (!bmp_obj.begin_I2C())
-        {
-            Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-        }
-        else
-        {
-            // Set up oversampling and filter initialization
-            bmp_obj.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-            bmp_obj.setPressureOversampling(BMP3_OVERSAMPLING_4X);
-            bmp_obj.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-            bmp_obj.setOutputDataRate(BMP3_ODR_50_HZ);
-            Serial.println("Complete!");
-            return true;
-        }
-        delay(2000);
-    }
-    return false;
-}
+// bool BBManager::setupSensorBMP(Adafruit_BMP3XX &bmp_obj) {
+//   Serial.println("Setting up barometric pressure sensor...");
+//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
+//     if (!bmp_obj.begin_I2C()) {
+//       Serial.println("Could not find a valid BMP3 sensor, check wiring!");
+//     } else {
+//       // Set up oversampling and filter initialization
+//       bmp_obj.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+//       bmp_obj.setPressureOversampling(BMP3_OVERSAMPLING_4X);
+//       bmp_obj.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+//       bmp_obj.setOutputDataRate(BMP3_ODR_50_HZ);
+//       Serial.println("Complete!");
+//       return true;
+//     }
+//     delay(2000);
+//   }
+//   return false;
+// }
 
 /*
  * setupSensorTemp
@@ -361,26 +296,21 @@ bool BBManager::setupSensorBMP(Adafruit_BMP3XX &bmp_obj)
  *            For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/overview
  */
-bool BBManager::setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
-{
-    Serial.println("Setting up temperature sensor...");
-    for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
-    {
-        if (!tempsensor_obj.begin(address))
-        {
-            Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
-        }
-        else
-        {
-            tempsensor_obj.setResolution(3);
-            tempsensor_obj.wake();
-            Serial.println("Complete!");
-            return true;
-        }
-        delay(2000);
-    }
-    return false;
-}
+// bool BBManager::setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address) {
+//   Serial.println("Setting up temperature sensor...");
+//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
+//     if (!tempsensor_obj.begin(address)) {
+//       Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+//     } else {
+//       tempsensor_obj.setResolution(3);
+//       tempsensor_obj.wake();
+//       Serial.println("Complete!");
+//       return true;
+//     }
+//     delay(2000);
+//   }
+//   return false;
+// }
 
 /*
  * setupSD
@@ -390,23 +320,18 @@ bool BBManager::setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t addres
  * Notes: Documentation on the module can be found here
  *          https://learn.adafruit.com/adafruit-micro-sd-breakout-board-card-tutorial/introduction
  */
-bool BBManager::setupSD()
-{
-    for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
-    {
-        if (!SD.begin(SD_CS))
-        {
-            delay(2000);
-        }
-        else
-        {
-            Serial.println("Complete!");
-            return true;
-        }
-        delay(2000);
-    }
-    return false;
-}
+// bool BBManager::setupSD() {
+//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
+//     if (!SD.begin(SD_CS)) {
+//       delay(2000);
+//     } else {
+//       Serial.println("Complete!");
+//       return true;
+//     }
+//     delay(2000);
+//   }
+//   return false;
+// }
 
 /*
  * setupGPS
@@ -417,10 +342,3 @@ bool BBManager::setupSD()
  * TODO: Need to figure how setting up the GPS module can go wrong so we can return
  *          false when it does
  */
-bool BBManager::setupGPS(Adafruit_GPS &gps_obj)
-{
-    gps_obj.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-    gps_obj.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-    gps_obj.sendCommand(PGCMD_ANTENNA);
-    return true;
-}

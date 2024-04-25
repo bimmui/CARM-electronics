@@ -56,3 +56,19 @@ float AltitudeEstimator::getVerticalAcceleration()
         // return the last estimated vertical acceleration
         return pastVerticalAccel;
 }
+
+void AltitudeEstimator::resetPriors()
+{
+        pastGyro[0] = 0;
+        pastGyro[1] = 0;
+        pastGyro[3] = 0;
+        pastAccel[0] = 0;
+        pastAccel[1] = 0;
+        pastAccel[3] = 0;
+        pastVerticalAccel = 0;
+        pastVerticalVelocity = 0;
+        pastAltitude = 0;
+        previousTime = 0;
+        estimatedAltitude = 0;
+        estimatedVelocity = 0;
+}

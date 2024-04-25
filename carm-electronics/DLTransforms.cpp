@@ -11,7 +11,7 @@
  **************************************************************/
 
 #include "DLTransforms.h"
-#include "struct_file.h"
+#include "untransformed.h"
 
 const float EXT_TEMP_SPACING = 0.0683927699072;
 const float INT_TEMP_SPACING = 0.0620420127015;
@@ -70,7 +70,7 @@ float deserialize_dlt(unsigned int serialized, int n_min, float m_spacing)
 unsigned int *transform_poweron(BBManager bbman)
 {
   // there are 9 fields in this schema
-  unsigned int transformed_values[9];
+  static unsigned int transformed_values[9];
 
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
   transformed_values[1] = serialize_dlt(11, -15, 125, bbman.external_temp, EXT_TEMP_SPACING);
@@ -98,7 +98,7 @@ unsigned int *transform_poweron(BBManager bbman)
 unsigned int *transform_launchready(BBManager bbman)
 {
   // there are 26 fields in this schema
-  unsigned int transformed_values[26];
+  static unsigned int transformed_values[26];
 
   // STATE
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
@@ -150,7 +150,7 @@ unsigned int *transform_launchready(BBManager bbman)
   transformed_values[8] = serialize_dlt(20, -1440, 1440, bbman.gyro_y, GYRO_XY_SPACING);
 
   // KF VERTICAL VELOCITY CALCULATIONS
-  transformed_values[9] = serialize_dlt(15, -50, 350, bbman.vert_velocity, VERT_VELO_SPACING);
+  transformed_values[9] = serialize_dlt(15, -50, 350, bbman.k_vert_velocity, VERT_VELO_SPACING);
 
   // GYROSCOPE Z-AXIS MEASUREMENTS
   transformed_values[10] = serialize_dlt(17, -360, 360, bbman.gyro_z, GYRO_Z_SPACING);
@@ -183,7 +183,7 @@ unsigned int *transform_launchready(BBManager bbman)
   transformed_values[19] = serialize_dlt(11, -5, 5, bbman.mag_z, MAG_FORCE_SPACING);
 
   // ERROR FLAGS
-  transformed_values[20] = static_cast<unsigned int>(bbman.errors_bit_mask);
+  transformed_values[20] = static_cast<unsigned int>(bbman.failure_flags);
 
   // GPS SPEED MEASUREMENTS
   transformed_values[21] = serialize_dlt(10, 0, 70, bbman.gps_speed, GPS_SPEED_SPACING);
@@ -216,7 +216,7 @@ unsigned int *transform_launchready(BBManager bbman)
 unsigned int *transform_launchmode(BBManager bbman)
 {
   // there are 27 fields in this schema
-  unsigned int transformed_values[27];
+  static unsigned int transformed_values[27];
 
   // STATE
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
@@ -307,13 +307,13 @@ unsigned int *transform_launchmode(BBManager bbman)
   transformed_values[21] = serialize_dlt(11, -5, 5, bbman.mag_z, MAG_FORCE_SPACING);
 
   // ERROR FLAGS
-  transformed_values[22] = static_cast<unsigned int>(bbman.errors_bit_mask);
+  transformed_values[22] = static_cast<unsigned int>(bbman.failure_flags);
 
   // GPS SPEED MEASUREMENTS
   transformed_values[23] = serialize_dlt(10, 0, 70, bbman.gps_speed, GPS_SPEED_SPACING);
 
   // KF VERTICAL VELOCITY CALCULATIONS
-  transformed_values[24] = serialize_dlt(15, -50, 350, bbman.vert_velocity, VERT_VELO_SPACING);
+  transformed_values[24] = serialize_dlt(15, -50, 350, bbman.k_vert_velocity, VERT_VELO_SPACING);
 
   // GPS SIGNAL QUALITY
   transformed_values[25] = static_cast<unsigned int>(bbman.gps_quality);
@@ -337,7 +337,7 @@ unsigned int *transform_launchmode(BBManager bbman)
 unsigned int *transform_recovery(BBManager bbman)
 {
   // there are 13 fields in this schema
-  unsigned int transformed_values[13];
+  static unsigned int transformed_values[13];
 
   transformed_values[0] = static_cast<unsigned int>(bbman.curr_state);
   transformed_values[1] = bbman.gps_num_satellites;
@@ -380,7 +380,7 @@ unsigned int *transform_recovery(BBManager bbman)
   transformed_values[7] = serialize_dlt(11, 0, 127, bbman.temperature_engbay, INT_TEMP_SPACING);
   transformed_values[8] = serialize_dlt(11, 0, 127, bbman.temperature_avbay, INT_TEMP_SPACING);
   transformed_values[9] = static_cast<unsigned int>(bbman.gps_fix);
-  transformed_values[10] = static_cast<unsigned int>(bbman.errors_bit_mask);
+  transformed_values[10] = static_cast<unsigned int>(bbman.failure_flags);
   transformed_values[11] = static_cast<unsigned int>(bbman.gps_quality);
   transformed_values[12] = static_cast<unsigned int>(bbman.gps_antenna_status);
 
@@ -427,20 +427,20 @@ launchreadydata untransform_launchready(unsigned int *data)
 
   if (data[2] > 1)
   {
-    tempd_lr.gps_long = data[3]
+    tempd_lr.gps_long = data[3];
   }
   else
   {
-    tempd_lr.gps_long = data[3] * -1
+    tempd_lr.gps_long = data[3] * -1;
   }
 
   if (data[4] > 1)
   {
-    tempd_lr.gps_lat = data[5]
+    tempd_lr.gps_lat = data[5];
   }
   else
   {
-    tempd_lr.gps_lat = data[5] * -1
+    tempd_lr.gps_lat = data[5] * -1;
   }
 
   tempd_lr.gyro_x = deserialize_dlt(data[6], -1440, GYRO_XY_SPACING);
@@ -483,20 +483,20 @@ launchmodedata untransform_launchmode(unsigned int *data)
 
   if (data[2] > 1)
   {
-    tempd_lr.gps_long = data[3]
+    tempd_lm.gps_long = data[3];
   }
   else
   {
-    tempd_lr.gps_long = data[3] * -1
+    tempd_lm.gps_long = data[3] * -1;
   }
 
   if (data[4] > 1)
   {
-    tempd_lr.gps_lat = data[5]
+    tempd_lm.gps_lat = data[5];
   }
   else
   {
-    tempd_lr.gps_lat = data[5] * -1
+    tempd_lm.gps_lat = data[5] * -1;
   }
 
   tempd_lm.gyro_x = deserialize_dlt(data[6], -1440, GYRO_XY_SPACING);
@@ -540,20 +540,20 @@ recoverydata untransform_recovery(unsigned int *data)
 
   if (data[2] > 1)
   {
-    tempd_r.gps_long = data[3]
+    tempd_r.gps_long = data[3];
   }
   else
   {
-    tempd_r.gps_long = data[3] * -1
+    tempd_r.gps_long = data[3] * -1;
   }
 
   if (data[4] > 1)
   {
-    tempd_r.gps_lat = data[5]
+    tempd_r.gps_lat = data[5];
   }
   else
   {
-    tempd_r.gps_lat = data[5] * -1
+    tempd_r.gps_lat = data[5] * -1;
   }
 
   tempd_r.external_temp = deserialize_dlt(data[6], -15, EXT_TEMP_SPACING);

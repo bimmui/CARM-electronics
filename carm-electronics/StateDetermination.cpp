@@ -12,8 +12,6 @@
 
 #include "StateDetermination.h"
 #include "BBManager.h"
-#include "bitpack.h"
-#include "actions.h"
 
 StateDeterminer::StateDeterminer() : estimator(SIGMA_GYRO, SIGMA_ACCEL, SIGMA_BARO, CA, ACCEL_THRESHOLD)
 {
@@ -31,9 +29,9 @@ void StateDeterminer::determineState(BBManager &manager)
     float gyro_data[3] = {manager.gyro_x, manager.gyro_y, manager.gyro_z};
     estimator.estimate(accel_data, gyro_data, manager.altitude, manager.curr_launch_time * 1000);
 
-    float curr_alt = estimator.getCurrAltitude();
-    float curr_velo = estimator.getCurrVerticalVelocity();
-    float curr_accel = estimator.getCurrVerticalAcceleration();
+    float curr_alt = estimator.getAltitude();
+    float curr_velo = estimator.getVerticalVelocity();
+    float curr_accel = estimator.getVerticalAcceleration();
 
     manager.k_altitude = curr_alt;
     manager.k_vert_velocity = curr_velo;
@@ -44,8 +42,12 @@ void StateDeterminer::determineState(BBManager &manager)
         if (curr_velo > prev_velo && curr_accel > prev_accel && curr_velo > 3)
         {
             manager.curr_state = state::POWERED_FLIGHT_PHASE;
-            manager.launch_start_time = mills();
-        }
+            manager.launch_start_time = millis();
+            estimator.resetPriors();
+            curr_alt = 0;
+            curr_accel = 0;
+            curr_velo = 0;
+                }
         updatePrevEstimates(curr_alt, curr_accel, curr_velo);
         return;
     }
@@ -55,6 +57,11 @@ void StateDeterminer::determineState(BBManager &manager)
         if (curr_velo > prev_velo && curr_alt > prev_alt && curr_velo > 3)
         {
             manager.curr_state = state::POWERED_FLIGHT_PHASE;
+            manager.launch_start_time = millis();
+            estimator.resetPriors();
+            curr_alt = 0;
+            curr_accel = 0;
+            curr_velo = 0;
         }
         updatePrevEstimates(curr_alt, curr_accel, curr_velo);
         return;
@@ -83,16 +90,6 @@ void StateDeterminer::determineState(BBManager &manager)
 
     if (manager.curr_state == state::COAST_PHASE)
     {
-        if (curr_accel < prev_accel)
-        {
-            manager.curr_state = state::COAST_PHASE;
-        }
-        updatePrevEstimates(curr_alt, curr_accel, curr_velo);
-        return;
-    }
-
-    if (manager.curr_state == state::COAST_PHASE)
-    {
         if (curr_velo >= 0 || curr_velo <= 3)
         {
             manager.curr_state = state::APOGEE_PHASE;
@@ -106,10 +103,7 @@ void StateDeterminer::determineState(BBManager &manager)
     {
         // should i check for continuity or what
         // if it deploys at apogee, there shouldnt be much happening
-        if (simulate_drogue_deploy())
-        {
-            manager.curr_state = state::DROGUE_DEPLOYED;
-        }
+        manager.curr_state = state::DROGUE_DEPLOYED;
         updatePrevEstimates(curr_alt, curr_accel, curr_velo);
         return;
     }

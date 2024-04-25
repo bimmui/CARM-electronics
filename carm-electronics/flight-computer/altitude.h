@@ -51,4 +51,6 @@ public:
 
   float getVerticalAcceleration();
 
+  void resetPriors();
+
 }; // class AltitudeEstimator

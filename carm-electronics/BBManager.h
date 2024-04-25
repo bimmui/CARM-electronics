@@ -30,8 +30,12 @@ class BBManager
 public:
     BBManager();
     ~BBManager();
+    void setSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
+                    Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2,
+                    Adafruit_GPS &gps_obj);
     void readSensorData();
-    void writeSensorData();
+    void writeSensorData(File &data_stream, File &error_stream);
+    void initDatalog(File &file_stream);
     unsigned launch_start_time;
     unsigned curr_launch_time;
     float temperature_avbay;
@@ -69,21 +73,11 @@ public:
     // TODO: make functions that edit the bit mask whenever an error occurs
 
 private:
-    // TODO: Fix all the GPS stuff here, it doesnt set it up with the function
-    //          for some reason, likely a pointer issue
-    Adafruit_LSM9DS1 lsm;               // imu
-    Adafruit_BMP3XX bmp;                // barometric pressure sensor
-    Adafruit_MCP9808 tempsensor_avbay;  // avionics bay thermocouple
-    Adafruit_MCP9808 tempsensor_engbay; // engine bay thermocouple
-    File launch_data;                   // file object for writing data
-    File error_data;                    // file object for errors
-    // Adafruit_GPS GPS(&GPSSerial);       // hardware GPS object
-    bool setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj);
-    bool setupSensorBMP(Adafruit_BMP3XX &bmp_obj);
-    bool setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj,
-                         uint8_t address);
-    bool setupSD();
-    bool setupGPS(Adafruit_GPS &gps_obj); // TODO: Fix this
+    Adafruit_LSM9DS1 *lsm;               // imu
+    Adafruit_BMP3XX *bmp;                // barometric pressure sensor
+    Adafruit_MCP9808 *tempsensor_avbay;  // avionics bay thermocouple
+    Adafruit_MCP9808 *tempsensor_engbay; // engine bay thermocouple
+    Adafruit_GPS *gps;                   // gps module
 };
 
 #endif
