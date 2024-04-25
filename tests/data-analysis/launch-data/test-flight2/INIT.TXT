@@ -1,0 +1,5 @@
+IMU successfully set up
+BMP successfully set up
+External temp. unsuccessfully set up
+Avionics bay temp. successfully set up
+----------------------------------------------------------------------------

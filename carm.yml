@@ -7,11 +7,14 @@ dependencies:
   - codecov
   - git
   - pip
-  ## Jupyter notebook for power/current sims
+  ## Jupyter notebook for data analysis
   - numpy
   - matplotlib
   - astropy
   - seaborn
+  - scipy
+  - ipympl
+  - mplcursors
   ## Web server
   - dash=2.14.2
   ## Data processing
