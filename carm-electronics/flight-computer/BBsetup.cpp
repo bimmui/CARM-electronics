@@ -16,6 +16,7 @@
 #include "def.h"
 
 const int MAX_ATTEMPTS = 20;
+const uint16_t CALIBRATE_ITERS = 3000;
 
 /*
  * setupSensorIMU
@@ -26,7 +27,7 @@ const int MAX_ATTEMPTS = 20;
  * Notes: The sensor was set up in I2C. For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-lsm9ds1-accelerometer-plus-gyro-plus-magnetometer-9-dof-breakout/overview
  */
-bool setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
+bool setup_IMU(Adafruit_LSM9DS1 &lsm_obj)
 {
     Serial.println("Setting up IMU...");
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
@@ -37,9 +38,9 @@ bool setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
         }
         else
         {
-            lsm_obj.setupAccel(lsm_obj.LSM9DS1_ACCELRANGE_2G);
+            lsm_obj.setupAccel(lsm_obj.LSM9DS1_ACCELRANGE_16G);
             lsm_obj.setupMag(lsm_obj.LSM9DS1_MAGGAIN_4GAUSS);
-            lsm_obj.setupGyro(lsm_obj.LSM9DS1_GYROSCALE_245DPS);
+            lsm_obj.setupGyro(lsm_obj.LSM9DS1_GYROSCALE_2000DPS);
             Serial.println("Complete!");
             return true;
         }
@@ -57,7 +58,7 @@ bool setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj)
  * Notes: The sensor was set up in I2C. For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-bmp388-bmp390-bmp3xx/overview
  */
-bool setupSensorBMP(Adafruit_BMP3XX &bmp_obj)
+bool setup_BMP(Adafruit_BMP3XX &bmp_obj)
 {
     Serial.println("Setting up barometric pressure sensor...");
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
@@ -91,7 +92,7 @@ bool setupSensorBMP(Adafruit_BMP3XX &bmp_obj)
  *            For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/overview
  */
-bool setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
+bool setup_Temp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
 {
     Serial.println("Setting up temperature sensor...");
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
@@ -120,7 +121,7 @@ bool setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
  * Notes: Documentation on the module can be found here
  *          https://learn.adafruit.com/adafruit-micro-sd-breakout-board-card-tutorial/introduction
  */
-bool setupSD()
+bool setup_SD()
 {
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
     {
@@ -148,11 +149,40 @@ bool setupSD()
  * TODO: Need to figure how setting up the GPS module can go wrong so we can return
  *          false when it does
  */
-bool setupGPS(Adafruit_GPS &gps_obj)
+bool setup_GPS(Adafruit_GPS &gps_obj)
 {
     gps_obj.begin(9600);
     gps_obj.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
     gps_obj.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
     gps_obj.sendCommand(PGCMD_ANTENNA);
     return true;
+}
+
+void calibrate_sensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj)
+{
+}
+
+// Function to compute barometer standard deviations
+float calibrate_barometer(Adafruit_BMP3XX &bmp_obj)
+{
+    // store all pressure readings
+    float history[CALIBRATE_ITERS];
+    float meanPressure = 0;
+    for (uint16_t index = 0; index < CALIBRATE_ITERS; index++)
+    {
+        pressure = bmp->pressure / 100.0;
+        float readPressure;
+        barometer.getPressure(&readPressure);
+        history[index] = readPressure;
+        // we will use pressureSum to compute the mean pressure
+        meanPressure += readPressure;
+    }
+    meanPressure /= CALIBRATE_ITERS;
+    // Compute standard deviation
+    float numerator = 0;
+    for (uint16_t index = 0; index < CALIBRATE_ITERS; index++)
+    {
+        numerator += pow(history[index] - meanPressure, 2);
+    }
+    return sqrt(numerator / (CALIBRATE_ITERS - 1));
 }

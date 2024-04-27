@@ -50,3 +50,4 @@ conda list
 - `Queue` (ver 1.11)
 - `RadioHead` (ver 1.122.1)
 - `Profiler` (ver 1.0.2)
+- `Adafruit Sensor Lab` (ver 0.8.2)

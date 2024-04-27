@@ -1,6 +1,6 @@
 /**************************************************************
  *
- *                     bb_setup.h
+ *                     BBsetup.h
  *
  *     Author(s):  Daniel Opara,
  *     Date:       1/6/2024
@@ -21,10 +21,11 @@
 #include <Adafruit_GPS.h>
 #include <SD.h>
 
-bool setupSensorIMU(Adafruit_LSM9DS1 &lsm_obj);
-bool setupSensorBMP(Adafruit_BMP3XX &bmp_obj);
-bool setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address);
-bool setupSD();
-bool setupGPS(Adafruit_GPS &gps_obj);
+bool setup_IMU(Adafruit_LSM9DS1 &lsm_obj);
+bool setup_BMP(Adafruit_BMP3XX &bmp_obj);
+bool setup_temp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address);
+bool setup_SD();
+bool setup_GPS(Adafruit_GPS &gps_obj);
+void calibr
 
 #endif
