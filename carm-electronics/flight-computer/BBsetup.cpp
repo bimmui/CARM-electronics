@@ -157,32 +157,3 @@ bool setup_GPS(Adafruit_GPS &gps_obj)
     gps_obj.sendCommand(PGCMD_ANTENNA);
     return true;
 }
-
-void calibrate_sensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj)
-{
-}
-
-// Function to compute barometer standard deviations
-float calibrate_barometer(Adafruit_BMP3XX &bmp_obj)
-{
-    // store all pressure readings
-    float history[CALIBRATE_ITERS];
-    float meanPressure = 0;
-    for (uint16_t index = 0; index < CALIBRATE_ITERS; index++)
-    {
-        pressure = bmp->pressure / 100.0;
-        float readPressure;
-        barometer.getPressure(&readPressure);
-        history[index] = readPressure;
-        // we will use pressureSum to compute the mean pressure
-        meanPressure += readPressure;
-    }
-    meanPressure /= CALIBRATE_ITERS;
-    // Compute standard deviation
-    float numerator = 0;
-    for (uint16_t index = 0; index < CALIBRATE_ITERS; index++)
-    {
-        numerator += pow(history[index] - meanPressure, 2);
-    }
-    return sqrt(numerator / (CALIBRATE_ITERS - 1));
-}

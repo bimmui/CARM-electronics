@@ -39,7 +39,7 @@ conda list
 
 1\. Open the Arduino IDE and navigate to the boards manager
 
-2\. Download `Arduino SAMD Boards` (ver 1.7.13 at time of writing). This will allow the IDE to communicate with your Feather M0 (compile, upload code, access serial, etc).
+2\. Download `Adafruit SAMD Boards` (ver 1.7.13 at time of writing). This will allow the IDE to communicate with your Feather M0 (compile, upload code, access serial, etc).
 
 3\. Navigate to the library manager. Download the following libraries and their dependencies. The version number at the time of writing is included.
 - `Adafruit BMP3XX Library` (ver 2.1.4)
