@@ -27,8 +27,8 @@ ca = 0.5
 # gain of complementary filter
 Kc = np.array([np.sqrt(2 * (sigma_accel / sigma_baro)), sigma_accel / sigma_baro])
 
-data = pd.read_csv("tests/data-analysis/data/two-step-filtering/openrocket_revG.csv")
-launch_time = data["time (ms)"] - 1125703
+data = pd.read_csv("tests/data-analysis/data/two-step-filtering/G53FJ_10Feb24.csv")
+data["t"] = data["t"] - 580715
 
 
 def skew(v):
@@ -198,9 +198,7 @@ i_baro_prev = np.zeros(3)
 
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-with open(
-    "tests/data-analysis/data/filtering/twostepresults.csv", mode="w", newline=""
-) as file:
+with open("./twostepresults.csv", mode="w", newline="") as file:
     writer = csv.writer(file)
 
     # Write the header row
@@ -214,15 +212,15 @@ with open(
         accel = (
             np.array(
                 [
-                    row["x acceleration (m/s^2)"],
-                    row["y acceleration (m/s^2)"],
-                    row["z acceleration (m/s^2)"],
+                    row["AX"] / 9.81,
+                    row["AY"] / 9.81,
+                    row["AZ"] / 9.81,
                 ]
             )
             * g
         )
-        gyro = np.array([row["x gyro (dps)"], row["y gyro (dps)"], row["z gyro (dps)"]])
-        baro = row["air pressure (kPa)"]
+        gyro = np.array([row["GX"], row["GY"], row["GZ"]])
+        baro = row["BP"]
 
         if not calibrated:
             calibrated = True
@@ -231,7 +229,7 @@ with open(
 
         # Calculate sampling period
 
-        curr_time = row["time (ms)"] - 1125703
+        curr_time = row["t"]
         T = curr_time - prev_time
 
         # oversample via linear interpolation
@@ -278,7 +276,7 @@ with open(
                     np.array([[1, DESIRED_SAMPLING], [0, 1]]).dot(state)
                     + np.array([[1, DESIRED_SAMPLING / 2], [0, 1]]).dot(Kc)
                     * DESIRED_SAMPLING
-                    * (row["altitude (m)"] - h)
+                    * (row["BA"] - h)
                     + np.array([DESIRED_SAMPLING / 2, 1])
                     * DESIRED_SAMPLING
                     * a_earth_prev
@@ -294,7 +292,7 @@ with open(
 
             # to see what's going on
 
-            writer.writerow([a_earth, v, h])
+            writer.writerow([a_sensor, a_earth, v, h])
 
             # complementary filter estimates from values of previous measurements
 
