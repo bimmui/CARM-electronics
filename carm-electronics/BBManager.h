@@ -31,19 +31,21 @@ public:
     BBManager();
     ~BBManager();
     void setSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
-                    Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2,
-                    Adafruit_GPS &gps_obj);
+                    Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2);
     void readSensorData();
     void writeSensorData(File &data_stream, File &error_stream);
     void initDatalog(File &file_stream);
-    unsigned launch_start_time;
-    unsigned curr_launch_time;
+    void setBaroOffset();
+    // we dont care about this right now
+    // unsigned launch_start_time;
+    unsigned long curr_launch_time;
     float temperature_avbay;
     float temperature_engbay;
     float external_temp;
     float barometer_temp;
     float pressure;
     float altitude;
+    float raw_altitude;
 
     // kalman filtered values
     float k_vert_velocity;
@@ -72,12 +74,15 @@ public:
     uint16_t failure_flags;
     // TODO: make functions that edit the bit mask whenever an error occurs
 
+    // sensor offsets and correction values
+    float baro_offset;
+
 private:
     Adafruit_LSM9DS1 *lsm;               // imu
     Adafruit_BMP3XX *bmp;                // barometric pressure sensor
     Adafruit_MCP9808 *tempsensor_avbay;  // avionics bay thermocouple
     Adafruit_MCP9808 *tempsensor_engbay; // engine bay thermocouple
-    Adafruit_GPS *gps;                   // gps module
+    // Adafruit_GPS *gps;                   // gps module
 };
 
 #endif

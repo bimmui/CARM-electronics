@@ -26,6 +26,7 @@ ca = 0.5
 
 # gain of complementary filter
 Kc = np.array([np.sqrt(2 * (sigma_accel / sigma_baro)), sigma_accel / sigma_baro])
+print("This is the complementary filter gain", Kc)
 
 data = pd.read_csv("tests/data-analysis/data/two-step-filtering/G53FJ_10Feb24.csv")
 data["t"] = data["t"] - 580715
@@ -232,77 +233,58 @@ with open("./twostepresults.csv", mode="w", newline="") as file:
         curr_time = row["t"]
         T = curr_time - prev_time
 
-        # oversample via linear interpolation
+        # Kalman filter for vertical acceleration estimation
 
-        for delta_t in np.linspace(DESIRED_SAMPLING, T, int(T / DESIRED_SAMPLING)):
+        # Prediction update with data from previous iteration and sensorss
 
-            # interpolate values
+        z = predict_state(i_gyro_prev, z_prev, T)  # State prediction
+        z /= la.norm(z)
+        P = predict_error_covariance(i_gyro_prev, z_prev, T, P, sigma_gyro)
 
-            i_accel = np.array(interpolate_array(delta_t, 0, T, accel_prev, accel))
-            i_gyro = np.array(interpolate_array(delta_t, 0, T, gyro_prev, gyro))
-            i_baro = interpolate(delta_t, 0, T, baro_prev, baro)
+        # Measurement update
 
-            # Kalman filter for vertical acceleration estimation
+        K = update_kalman_gain(P, H, ca, a_sensor, sigma_accel)
+        measurement = accel - ca * a_sensor
+        z = update_state_with_measurement(z, K, measurement, H)
+        z /= la.norm(z)
+        P = update_error_covariance(P, H, K)
 
-            # Prediction update with data from previous iteration and sensorss
+        # compute the acceleration from the estimated value of z
 
-            z = predict_state(i_gyro_prev, z_prev, DESIRED_SAMPLING)  # State prediction
-            z /= la.norm(z)
-            P = predict_error_covariance(
-                i_gyro_prev, z_prev, DESIRED_SAMPLING, P, sigma_gyro
+        a_sensor = accel - g * z
+
+        # Acceleration in earth reference frame
+
+        a_earth = np.vdot(a_sensor, z)
+
+        # Complementary filter for altitude and vertical velocity estimation
+
+        state = np.array([h, v])
+        if baro_prev and a_earth_prev:
+            state = (
+                np.array([[1, T], [0, 1]]).dot(state)
+                + np.array([[1, T / 2], [0, 1]]).dot(Kc) * T * (row["BA"] - h)
+                + np.array([T / 2, 1]) * T * a_earth_prev
             )
+        (h, v) = state
 
-            # Measurement update
+        # ZUPT
 
-            K = update_kalman_gain(P, H, ca, a_sensor, sigma_accel)
-            measurement = accel - ca * a_sensor
-            z = update_state_with_measurement(z, K, measurement, H)
-            z /= la.norm(z)
-            P = update_error_covariance(P, H, K)
+        (v, zupt_history, zupt_counter) = ZUPT(a_earth, v, zupt_history, zupt_counter)
+        zupt_counter += 1
 
-            # compute the acceleration from the estimated value of z
+        # to see what's going on
+        writer.writerow([a_earth, v, h])
 
-            a_sensor = i_accel - g * z
+        # complementary filter estimates from values of previous measurements
 
-            # Acceleration in earth reference frame
+        i_baro_prev = baro
+        a_earth_prev = a_earth
 
-            a_earth = np.vdot(a_sensor, z)
+        # for next kalman iteration
 
-            # Complementary filter for altitude and vertical velocity estimation
-
-            state = np.array([h, v])
-            if baro_prev and a_earth_prev:
-                state = (
-                    np.array([[1, DESIRED_SAMPLING], [0, 1]]).dot(state)
-                    + np.array([[1, DESIRED_SAMPLING / 2], [0, 1]]).dot(Kc)
-                    * DESIRED_SAMPLING
-                    * (row["BA"] - h)
-                    + np.array([DESIRED_SAMPLING / 2, 1])
-                    * DESIRED_SAMPLING
-                    * a_earth_prev
-                )
-            (h, v) = state
-
-            # ZUPT
-
-            (v, zupt_history, zupt_counter) = ZUPT(
-                a_earth, v, zupt_history, zupt_counter
-            )
-            zupt_counter += 1
-
-            # to see what's going on
-
-            writer.writerow([a_sensor, a_earth, v, h])
-
-            # complementary filter estimates from values of previous measurements
-
-            i_baro_prev = i_baro
-            a_earth_prev = a_earth
-
-            # for next kalman iteration
-
-            i_gyro_prev = i_gyro
-            z_prev = z
+        i_gyro_prev = gyro
+        z_prev = z
 
         # for next interpolation
 

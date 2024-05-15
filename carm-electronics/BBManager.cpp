@@ -15,6 +15,8 @@
 #include "utils.h"
 
 static const unsigned MAX_ATTEMPTS = 20;
+static const unsigned DECIMAL_COUNT = 4;
+static const unsigned GPS_DECIMAL_COUNT = 6;
 
 /*
  * setupSensorIMU
@@ -59,6 +61,8 @@ void BBManager::initDatalog(File &file_stream)
         file_stream.print("air pressure (kPa)"); // in kiloPascals
         file_stream.print(",");
         file_stream.print("altitude (m)"); // in meters
+        file_stream.print(",");
+        file_stream.print("raw altitude (m)"); // in meters
         file_stream.print(",");
         file_stream.print("kf vertical velocity (m/s)"); // in m/s
         file_stream.print(",");
@@ -120,14 +124,13 @@ BBManager::~BBManager()
 }
 
 void BBManager::setSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
-                           Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2,
-                           Adafruit_GPS &gps_obj)
+                           Adafruit_MCP9808 &tempsensor_obj1, Adafruit_MCP9808 &tempsensor_obj2)
 {
     lsm = &lsm_obj;
     bmp = &bmp_obj;
     tempsensor_avbay = &tempsensor_obj1;
     tempsensor_engbay = &tempsensor_obj2;
-    gps = &gps_obj;
+    // Serial.println(reinterpret_cast<intptr_t>(*gps));
 }
 
 /*
@@ -144,18 +147,24 @@ void BBManager::readSensorData()
     sensors_event_t a, m, g, temp;
     lsm->getEvent(&a, &m, &g, &temp);
 
-    curr_launch_time = millis() - launch_start_time;
+    // use this when we have to care about zeroing the data
+    // curr_launch_time = millis() - launch_start_time;
+    curr_launch_time = millis();
 
     // bmp reading
     if (!bmp->performReading())
     {
         pressure = 0;
         altitude = 0;
+        barometer_temp = 0;
     }
     else
     {
         pressure = bmp->pressure / 100.0;
-        altitude = bmp->readAltitude(SEALEVELPRESSURE_HPA);
+        altitude = bmp->readAltitude(SEALEVELPRESSURE_HPA) - baro_offset;
+        // altitude = (altitude < 0) ? 0 : altitude;
+        raw_altitude = bmp->readAltitude(SEALEVELPRESSURE_HPA);
+        barometer_temp = bmp->temperature;
     }
 
     temperature_avbay = tempsensor_avbay->readTempC();
@@ -169,8 +178,6 @@ void BBManager::readSensorData()
     gyro_x = g.gyro.x;
     gyro_y = g.gyro.y;
     gyro_z = g.gyro.z;
-
-    // TODO: Add code that gets readings from the GPS
 }
 
 /*
@@ -186,63 +193,67 @@ void BBManager::writeSensorData(File &data_stream, File &error_stream)
     if (data_stream)
     {
         // could use static_cast<std::underlying_type_t<state>> to make it more general purpose but we know it's an int
-        data_stream.print(static_cast<int>(curr_state));
-        data_stream.print(",");
-        data_stream.print(curr_launch_time);
-        data_stream.print(",");
-        data_stream.print(external_temp);
-        data_stream.print(",");
-        data_stream.print(temperature_engbay);
-        data_stream.print(",");
-        data_stream.print(barometer_temp);
-        data_stream.print(",");
-        data_stream.print(pressure);
-        data_stream.print(",");
-        data_stream.print(altitude);
-        data_stream.print(",");
-        data_stream.print(k_vert_velocity);
-        data_stream.print(",");
-        data_stream.print(k_vert_acceleration);
-        data_stream.print(",");
-        data_stream.print(k_altitude);
-        data_stream.print(",");
-        data_stream.print(accel_x);
-        data_stream.print(",");
-        data_stream.print(accel_y);
-        data_stream.print(",");
-        data_stream.print(accel_z);
-        data_stream.print(",");
-        data_stream.print(mag_x);
-        data_stream.print(",");
-        data_stream.print(mag_y);
-        data_stream.print(",");
-        data_stream.print(mag_z);
-        data_stream.print(",");
-        data_stream.print(gyro_x);
-        data_stream.print(",");
-        data_stream.print(gyro_y);
-        data_stream.print(",");
-        data_stream.print(gyro_z);
-        data_stream.print(",");
-        data_stream.print(gps_lat);
-        data_stream.print(",");
-        data_stream.print(gps_long);
-        data_stream.print(",");
-        data_stream.print(gps_speed);
-        data_stream.print(",");
-        data_stream.print(gps_angle);
-        data_stream.print(",");
-        data_stream.print(gps_altitude);
-        data_stream.print(",");
-        data_stream.print(gps_fix);
-        data_stream.print(",");
-        data_stream.print(gps_quality);
-        data_stream.print(",");
-        data_stream.print(gps_num_satellites);
-        data_stream.print(",");
-        data_stream.print(gps_antenna_status);
-        data_stream.print(",");
-        data_stream.println(failure_flags);
+        Serial.print(static_cast<int>(curr_state));
+        Serial.print(",");
+        Serial.print(curr_launch_time);
+        Serial.print(",");
+        Serial.print(external_temp, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(temperature_engbay, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(barometer_temp, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(pressure, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(altitude, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(raw_altitude, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(k_vert_velocity, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(k_vert_acceleration, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(k_altitude, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(accel_x, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(accel_y, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(accel_z, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(mag_x, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(mag_y, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(mag_z, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gyro_x, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gyro_y, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gyro_z, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gps_lat, GPS_DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gps_long, GPS_DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(gps_speed, DECIMAL_COUNT);
+        Serial.print(",");
+        // i dont bother with gps angle and alt bc its straight up casted to a double
+        // when we get it from the gps module
+        Serial.print(gps_angle);
+        Serial.print(",");
+        Serial.print(gps_altitude);
+        Serial.print(",");
+        Serial.print(gps_fix);
+        Serial.print(",");
+        Serial.print(gps_quality);
+        Serial.print(",");
+        Serial.print(gps_num_satellites);
+        Serial.print(",");
+        Serial.print(gps_antenna_status);
+        Serial.print(",");
+        Serial.println(failure_flags);
         data_stream.close();
     }
     else
@@ -258,81 +269,34 @@ void BBManager::writeSensorData(File &data_stream, File &error_stream)
     }
 }
 
-/*
- * setupSensorBMP
- * Parameters: Reference (pointer) to the instantiated barometric pressure sensor object
- * Purpose: Configures various settings of the BMP3 sensor to control the oversampling of temperature and pressure,
- *          set the IIR (Infinite Impulse Response) filter coefficient, and define the output data rate
- * Returns: Bool representing whether or not sensor was set up
- * Notes: The sensor was set up in I2C. For more info, read the device documentation:
- *            https://learn.adafruit.com/adafruit-bmp388-bmp390-bmp3xx/overview
- */
-// bool BBManager::setupSensorBMP(Adafruit_BMP3XX &bmp_obj) {
-//   Serial.println("Setting up barometric pressure sensor...");
-//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
-//     if (!bmp_obj.begin_I2C()) {
-//       Serial.println("Could not find a valid BMP3 sensor, check wiring!");
-//     } else {
-//       // Set up oversampling and filter initialization
-//       bmp_obj.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-//       bmp_obj.setPressureOversampling(BMP3_OVERSAMPLING_4X);
-//       bmp_obj.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-//       bmp_obj.setOutputDataRate(BMP3_ODR_50_HZ);
-//       Serial.println("Complete!");
-//       return true;
-//     }
-//     delay(2000);
-//   }
-//   return false;
-// }
+void BBManager::setBaroOffset()
+{
+    float altitude_readings_sum;
 
-/*
- * setupSensorTemp
- * Parameters: Reference (pointer) to the instantiated temp sensor object and address of the temperature sensor
- * Purpose: Connects the sensor to its address and sets the precision of measurements
- * Returns: Bool representing whether or not sensor was set up
- * Notes: The sensor was set up in I2C. The resolution of measurements impacts the time it takes to collect sample data,
- *            recommended to check out test/feather_scripts and view the comments on the example if you want to better understand how it works.
- *            For more info, read the device documentation:
- *            https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/overview
- */
-// bool BBManager::setupSensorTemp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address) {
-//   Serial.println("Setting up temperature sensor...");
-//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
-//     if (!tempsensor_obj.begin(address)) {
-//       Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
-//     } else {
-//       tempsensor_obj.setResolution(3);
-//       tempsensor_obj.wake();
-//       Serial.println("Complete!");
-//       return true;
-//     }
-//     delay(2000);
-//   }
-//   return false;
-// }
+    Serial.println("Calculating barometer offset...");
 
-/*
- * setupSD
- * Parameters: The digital pin the SD card module is connected to
- * Purpose: Initailizes the SD card module
- * Returns: Bool representing whether or not the module was set up
- * Notes: Documentation on the module can be found here
- *          https://learn.adafruit.com/adafruit-micro-sd-breakout-board-card-tutorial/introduction
- */
-// bool BBManager::setupSD() {
-//   for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++) {
-//     if (!SD.begin(SD_CS)) {
-//       delay(2000);
-//     } else {
-//       Serial.println("Complete!");
-//       return true;
-//     }
-//     delay(2000);
-//   }
-//   return false;
-// }
+    // Typically some weird spike in values read when you start things
+    // so ignore those first values
+    for (int i = 0; i < 100; i++)
+    {
+        bmp->readAltitude(SEALEVELPRESSURE_HPA);
+    }
+    for (int i = 0; i < 500; i++)
+    {
+        altitude_readings_sum += bmp->readAltitude(SEALEVELPRESSURE_HPA);
+        delay(50);
+    }
+    Serial.print("Readings sum: ");
+    Serial.println(altitude_readings_sum, DECIMAL_COUNT);
 
+    baro_offset = (altitude_readings_sum / 500.0);
+
+    Serial.print("Barometer offset: ");
+    Serial.println(baro_offset, DECIMAL_COUNT);
+    delay(3000);
+
+    Serial.println("Complete!");
+}
 /*
  * setupGPS
  * Parameters:

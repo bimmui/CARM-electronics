@@ -2,9 +2,9 @@
     altitude.cpp: Altitude estimation via barometer/accelerometer fusion
 */
 
-#include "filters.h"
-#include "algebra.h"
-#include "altitude.h"
+#include "filters.hpp"
+#include "algebra.hpp"
+#include "altitude.hpp"
 
 AltitudeEstimator::AltitudeEstimator(float sigmaAccel, float sigmaGyro, float sigmaBaro,
                                      float ca, float accelThreshold)
@@ -73,7 +73,7 @@ void AltitudeEstimator::resetPriors()
         estimatedVelocity = 0;
 }
 
-void AltitudeEstimator::setInitTime(unsigned long time)
+void AltitudeEstimator::setInitTime(float time)
 {
         previousTime = time;
 }

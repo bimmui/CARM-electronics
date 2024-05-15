@@ -16,7 +16,6 @@
 #include "def.h"
 
 const int MAX_ATTEMPTS = 20;
-const uint16_t CALIBRATE_ITERS = 3000;
 
 /*
  * setupSensorIMU
@@ -38,9 +37,9 @@ bool setup_IMU(Adafruit_LSM9DS1 &lsm_obj)
         }
         else
         {
-            lsm_obj.setupAccel(lsm_obj.LSM9DS1_ACCELRANGE_16G);
+            lsm_obj.setupAccel(lsm_obj.LSM9DS1_ACCELRANGE_4G);
             lsm_obj.setupMag(lsm_obj.LSM9DS1_MAGGAIN_4GAUSS);
-            lsm_obj.setupGyro(lsm_obj.LSM9DS1_GYROSCALE_2000DPS);
+            lsm_obj.setupGyro(lsm_obj.LSM9DS1_GYROSCALE_500DPS);
             Serial.println("Complete!");
             return true;
         }
@@ -92,7 +91,7 @@ bool setup_BMP(Adafruit_BMP3XX &bmp_obj)
  *            For more info, read the device documentation:
  *            https://learn.adafruit.com/adafruit-mcp9808-precision-i2c-temperature-sensor-guide/overview
  */
-bool setup_Temp(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
+bool setup_tempsens(Adafruit_MCP9808 &tempsensor_obj, uint8_t address)
 {
     Serial.println("Setting up temperature sensor...");
     for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
@@ -149,11 +148,12 @@ bool setup_SD()
  * TODO: Need to figure how setting up the GPS module can go wrong so we can return
  *          false when it does
  */
-bool setup_GPS(Adafruit_GPS &gps_obj)
+bool setup_GPS(Adafruit_GPS gps_obj)
 {
     gps_obj.begin(9600);
     gps_obj.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
     gps_obj.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
     gps_obj.sendCommand(PGCMD_ANTENNA);
+    GPSSerial.println(PMTK_Q_RELEASE);
     return true;
 }

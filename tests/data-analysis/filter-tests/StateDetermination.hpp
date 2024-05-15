@@ -15,7 +15,8 @@
 #define STATE_DETERMINATION_H
 
 #include <inttypes.h>
-#include "altitude.h"
+#include <fstream>
+#include "altitude.hpp"
 
 // standard noise deviation, calculated by Daniel
 #define SIGMA_GYRO 0.337
@@ -27,12 +28,7 @@
 #define CA 0.5
 
 // something for complementary filtering for the zero-velocity update feature
-#define ACCEL_THRESHOLD 0.3
-
-#define MAIN_DEPLOY_ALTITUDE 213.36 // meters, bode set it to 700 feet
-
-// forward declaration
-class BBManager;
+#define ACCEL_THRESHOLD 0.1
 
 enum class state
 {
@@ -53,24 +49,19 @@ class StateDeterminer
 public:
     StateDeterminer();
     ~StateDeterminer();
-    void determineState(BBManager &manager);
-    void switchGroundState(BBManager &manager, uint64_t packet);
+    void determineState(float accel_data[], float gyro_data[],
+                        float alt, float time, std::ofstream &ofstream);
 
 private:
     AltitudeEstimator estimator;
-
-    // used for ensuring the time is properly setup
     bool first_step;
-
-    // prev values
     float prev_alt;
     float prev_accel;
     float prev_velo;
-
+    float apogee;
     bool main_attempted;
     float launch_start_time;
     state curr_state;
-
     void updatePrevEstimates(float altitude, float acceleration, float velocity);
 };
 

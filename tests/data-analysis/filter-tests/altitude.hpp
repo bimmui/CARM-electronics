@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include "filters.h"
-#include "algebra.h"
-#include <Arduino.h>
+#include "filters.hpp"
+#include "algebra.hpp"
 
 class AltitudeEstimator
 {
@@ -24,7 +23,7 @@ private:
   // gravity
   float g = 9.81;
   // For computing the sampling period
-  uint32_t previousTime = millis();
+  uint32_t previousTime = 0;
   // required filters for altitude and vertical velocity estimation
   KalmanFilter kalman;
   ComplementaryFilter complementary;
@@ -52,6 +51,6 @@ public:
 
   void resetPriors();
 
-  void setInitTime(unsigned long time);
+  void setInitTime(float time);
 
 }; // class AltitudeEstimator
