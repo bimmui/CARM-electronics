@@ -59,9 +59,6 @@ public:
 private:
     AltitudeEstimator estimator;
 
-    // used for ensuring the time is properly setup
-    bool first_step;
-
     // prev values
     float prev_alt;
     float prev_accel;
