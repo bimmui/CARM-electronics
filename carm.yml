@@ -18,15 +18,15 @@ dependencies:
   ## Serial parsing
   - pyserial
   ## Web server
-  - dash=2.14.2
+  - dash==2.14.2
   ## Data processing
-  - pandas=2.1.4
+  - pandas==2.1.4
   - pip:
   ## Diagram Generation
     - bit-field[JSON5]==1.0.1
     - cairosvg
   ## Dashboard
     - dash-bootstrap-components==1.5.0
-    - dash-daq=0.5.0
+    - dash-daq==0.5.0
   - cairo
-  - Pillow=10.0.1
+  - Pillow==10.0.1
