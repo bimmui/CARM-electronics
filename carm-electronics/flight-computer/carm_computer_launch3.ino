@@ -9,6 +9,8 @@
 #include "utils.h"
 #include "BBManager.h"
 #include "BBsetup.h"
+#include "DLTransforms.h"
+#include "compression.h"
 
 void switchSPIDevice(int cs_pin)
 {
@@ -35,7 +37,7 @@ File launch_data;                                        // file object for writ
 File error_data;                                         // file object for errors
 BBManager bboard_manager = BBManager();
 StateDeterminer state_determiner = StateDeterminer();
-// RH_RF95 rf95(RFM95_CS, RFM95_INT);
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 void setup()
 {
@@ -54,6 +56,7 @@ void setup()
     pinMode(BUZZER_PIN, OUTPUT);
     bool sd_setup = setup_SD();
     File init_info = SD.open("init.txt", FILE_WRITE);
+    uint16_t init_fails = 0;
     if (init_info)
     {
         if (imu_setup)
@@ -63,6 +66,7 @@ void setup()
         else
         {
             init_info.println("IMU unsuccessfully set up");
+            init_fails = flip_bit(init_fails, 2, 1);
         }
 
         if (bmp_setup)
@@ -72,6 +76,7 @@ void setup()
         else
         {
             init_info.println("BMP unsuccessfully set up");
+            init_fails = flip_bit(init_fails, 3, 1);
         }
 
         if (temp_setup1)
@@ -81,6 +86,7 @@ void setup()
         else
         {
             init_info.println("External temp. unsuccessfully set up");
+            init_fails = flip_bit(init_fails, 4, 1);
         }
 
         if (temp_setup2)
@@ -90,34 +96,46 @@ void setup()
         else
         {
             init_info.println("Avionics bay temp. unsuccessfully set up");
+            init_fails = flip_bit(init_fails, 5, 1);
         }
         init_info.println("----------------------------------------------------------------------------");
         init_info.close();
-        tone(BUZZER_PIN, 4000); // Send 1KHz sound signal...
-        delay(1000);            // ...for 1 sec
-        noTone(BUZZER_PIN);     // Stop sound...
+        bboard_manager.failure_flags = init_fails;
+        tone(BUZZER_PIN, 4000);
+        delay(1000);
+        noTone(BUZZER_PIN);
     }
 
     // Setting up the transeiver
-    // switchSPIDevice(RFM95_CS);
-    // pinMode(RFM95_RST, OUTPUT);
-    // digitalWrite(RFM95_RST, HIGH);
-    // Serial.println("Feather LoRa TX Test!");
-    // while (!rf95.init()) {
-    //   Serial.println("LoRa radio init failed");
-    //   Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    //   while (1)
-    //     ;
-    // }
-    // Serial.println("LoRa radio init OK!");
-    // if (!rf95.setFrequency(RF95_FREQ_2)) {
-    //   Serial.println("setFrequency failed");
-    //   while (1)
-    //     ;
-    // }
-    // Serial.print("Set Freq to: ");
-    // Serial.println(RF95_FREQ_2);
-    // rf95.setTxPower(23, false);
+    switchSPIDevice(RFM95_CS);
+    pinMode(RFM95_RST, OUTPUT);
+    digitalWrite(RFM95_RST, HIGH);
+    Serial.println("Feather LoRa TX Test!");
+    if (!rf95.init())
+    {
+        Serial.println("LoRa radio init failed");
+        Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+    }
+    else
+    {
+        Serial.println("LoRa radio init OK!");
+        if (!rf95.setFrequency(RF95_FREQ_2))
+        {
+            Serial.println("setFrequency failed");
+        }
+        else
+        {
+            Serial.print("Set Freq to: ");
+            Serial.println(RF95_FREQ_2);
+            rf95.setTxPower(23, false);
+            for (int i = 0, i < 5; i++)
+            {
+                char init_success_packet[] = "Hello ground station!";
+                rf95.send((uint8_t *)init_success_packet, strlen(init_success_packet) + 1);
+                rf95.waitPacketSent();
+            }
+        }
+    }
 
     // handling the breakout board setup
     switchSPIDevice(SD_CS);
@@ -162,8 +180,8 @@ void loop()
     state_determiner.determineState(bboard_manager);
     bboard_manager.writeSensorData(launch_data, error_data);
 
-    // switchSPIDevice(RFM95_CS);
-    // char radiopacket[] = "Hello ground station";
-    // rf95.send((uint8_t *)radiopacket, strlen(radiopacket) + 1);
-    // rf95.waitPacketSent();
+    switchSPIDevice(RFM95_CS);
+    unsigned int *launchmode_d = transform_launchmode(bboard_manager);
+    uint64_t[5] launchmode_words = {pack_launchmode(launchmode_d)};
+    transmit(rf95, launchmode_words, 5);
 }

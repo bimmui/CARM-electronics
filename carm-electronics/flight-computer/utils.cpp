@@ -62,6 +62,7 @@ float convert_knots_to_mps(float knots)
     return knots * 0.514444;
 }
 
+// position is 0-based index and b ==  the bit you want it to be
 uint16_t flip_bit(unsigned n, unsigned p, unsigned b)
 {
     unsigned mask = 1 << p;

@@ -21,7 +21,7 @@ def create_gauge(gauge_id, label_text, value=5):
                 "bar": {"color": "#FFA07A"},  # Use black to hide the bar
                 "bgcolor": "#FFA07A",
                 "threshold": {
-                    "line": {"color": "#800020", "width": 4},
+                    "line": {"color": "#800020", "width": 6},
                     "thickness": 0.75,
                     "value": value,
                 },

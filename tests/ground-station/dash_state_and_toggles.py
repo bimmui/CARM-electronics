@@ -1,23 +1,53 @@
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, callback_context, no_update
 import dash_bootstrap_components as dbc
 import dash_daq as daq
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Another way to think of this:
-# ground_state - True if launch ready, false if not (power on state)
-# camera_state - True if on, false if not
-# units        - True if they are stupid (imperial), false if not
-STATE = {"ground_state": True, "camera_state": True, "units": True}
+# Initial states
+INITIAL_STATE = {"ground_state": True, "camera_state": True, "units": True}
+
+
+def create_bool_switches(id, left_label, right_label, switch_state, button_label=""):
+    switch_row = dbc.Row(
+        [
+            dbc.Col(
+                html.Label(
+                    left_label,
+                    style={"color": "white", "marginRight": "10px"},
+                ),
+                width="auto",
+            ),
+            dbc.Col(
+                daq.BooleanSwitch(
+                    id=id,
+                    on=switch_state,
+                    label=button_label,
+                    color="#00cc96",
+                    persistence=True,
+                    persisted_props=["on"],
+                    labelPosition="bottom",
+                ),
+                width="auto",
+            ),
+            dbc.Col(
+                html.Label(
+                    right_label,
+                    style={"color": "white", "marginLeft": "10px"},
+                ),
+                width="auto",
+            ),
+        ],
+        className="mb-3",
+    )
+    return switch_row
 
 
 app.layout = html.Div(
     style={"backgroundColor": "#333"},  # Background for the entire app
     children=[
-        dcc.Store(
-            id="state-store", data={"ready": True, "camera": True, "units": True}
-        ),
+        dcc.Store(id="state-store", storage_type="local", data=INITIAL_STATE),
         dbc.Container(
             style={
                 "backgroundColor": "transparent",
@@ -26,91 +56,37 @@ app.layout = html.Div(
                 "width": "300px",
             },
             children=[
-                html.H4(
-                    "Current State", style={"color": "white", "textAlign": "center"}
-                ),
-                dbc.Form(
+                dbc.Stack(
                     [
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.Label(
-                                        "Y",
-                                        style={"color": "white", "marginRight": "10px"},
-                                    ),
-                                    width="auto",
+                        html.H4(
+                            "Current State",
+                            style={"color": "white", "textAlign": "center"},
+                        ),
+                        dbc.Form(
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "width": "100%",
+                            },
+                            children=[
+                                create_bool_switches(
+                                    "ground-state-switch",
+                                    "POW ON",
+                                    "LNCH RDY",
+                                    False,
                                 ),
-                                dbc.Col(
-                                    daq.BooleanSwitch(
-                                        id="ready-switch", on=True, color="#00cc96"
-                                    ),
-                                    width="auto",
+                                create_bool_switches(
+                                    "camera-switch", "Off", "On", False
                                 ),
-                                dbc.Col(
-                                    html.Label(
-                                        "N",
-                                        style={"color": "white", "marginLeft": "10px"},
-                                    ),
-                                    width="auto",
+                                create_bool_switches(
+                                    "units-switch", "Metric", "Imperial", True
                                 ),
                             ],
-                            className="mb-3",
-                            align="center",
                         ),
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.Label(
-                                        "On",
-                                        style={"color": "white", "marginRight": "10px"},
-                                    ),
-                                    width="auto",
-                                ),
-                                dbc.Col(
-                                    daq.BooleanSwitch(
-                                        id="camera-switch", on=True, color="#00cc96"
-                                    ),
-                                    width="auto",
-                                ),
-                                dbc.Col(
-                                    html.Label(
-                                        "Off",
-                                        style={"color": "white", "marginLeft": "10px"},
-                                    ),
-                                    width="auto",
-                                ),
-                            ],
-                            className="mb-3",
-                            align="center",
-                        ),
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.Label(
-                                        "M",
-                                        style={"color": "white", "marginRight": "10px"},
-                                    ),
-                                    width="auto",
-                                ),
-                                dbc.Col(
-                                    daq.BooleanSwitch(
-                                        id="units-switch", on=True, color="#00cc96"
-                                    ),
-                                    width="auto",
-                                ),
-                                dbc.Col(
-                                    html.Label(
-                                        "I",
-                                        style={"color": "white", "marginLeft": "10px"},
-                                    ),
-                                    width="auto",
-                                ),
-                            ],
-                            className="mb-3",
-                            align="center",
-                        ),
-                    ]
-                ),
+                    ],
+                )
             ],
         ),
     ],
@@ -118,18 +94,42 @@ app.layout = html.Div(
 
 
 @app.callback(
-    Output("ready-switch", "on"),
-    Output("camera-switch", "on"),
-    Output("units-switch", "on"),
-    Input("ready-switch", "on"),
-    Input("camera-switch", "on"),
-    Input("units-switch", "on"),
+    [
+        Output("ground-state-switch", "on"),
+        Output("camera-switch", "on"),
+        Output("units-switch", "on"),
+    ],
+    [Input("state-store", "data")],
 )
-def update_output(ready, camera, units):
-    STATE["ground_state"] = ready
-    STATE["camera_state"] = camera
-    STATE["units"] = units
-    return ready, camera, units
+def load_initial_state(state_data):
+    return state_data["ground_state"], state_data["camera_state"], state_data["units"]
+
+
+@app.callback(
+    Output("state-store", "data"),
+    [
+        Input("ground-state-switch", "on"),
+        Input("camera-switch", "on"),
+        Input("units-switch", "on"),
+    ],
+    State("state-store", "data"),
+)
+def update_state_store(ground_state, camera_state, units_state, state_data):
+    ctx = callback_context
+
+    if not ctx.triggered:
+        return no_update
+
+    triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if triggered_id == "ground-state-switch":
+        state_data["ground_state"] = ground_state
+    elif triggered_id == "camera-switch":
+        state_data["camera_state"] = camera_state
+    elif triggered_id == "units-switch":
+        state_data["units"] = units_state
+
+    return state_data
 
 
 if __name__ == "__main__":

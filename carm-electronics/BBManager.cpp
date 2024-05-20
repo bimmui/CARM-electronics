@@ -157,6 +157,7 @@ void BBManager::readSensorData()
         pressure = 0;
         altitude = 0;
         barometer_temp = 0;
+        failure_flags = flip_bit(failure_flags, 10, 1);
     }
     else
     {
@@ -165,6 +166,7 @@ void BBManager::readSensorData()
         // altitude = (altitude < 0) ? 0 : altitude;
         raw_altitude = bmp->readAltitude(SEALEVELPRESSURE_HPA);
         barometer_temp = bmp->temperature;
+        failure_flags = flip_bit(failure_flags, 10, 0);
     }
 
     temperature_avbay = tempsensor_avbay->readTempC();
@@ -255,17 +257,11 @@ void BBManager::writeSensorData(File &data_stream, File &error_stream)
         Serial.print(",");
         Serial.println(failure_flags);
         data_stream.close();
+        failure_flags = flip_bit(failure_flags, 5, 0);
     }
     else
     {
-        error_stream = SD.open("errlog.txt", FILE_WRITE);
-        if (error_stream)
-        {
-            error_stream.print(curr_launch_time);
-            error_stream.print(": ");
-            error_stream.println("Error logging flight data");
-            error_stream.close();
-        }
+        failure_flags = flip_bit(failure_flags, 5, 1);
     }
 }
 
@@ -297,12 +293,3 @@ void BBManager::setBaroOffset()
 
     Serial.println("Complete!");
 }
-/*
- * setupGPS
- * Parameters:
- * Purpose:
- * Returns:
- * Notes:
- * TODO: Need to figure how setting up the GPS module can go wrong so we can return
- *          false when it does
- */

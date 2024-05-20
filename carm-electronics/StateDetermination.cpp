@@ -17,7 +17,6 @@ StateDeterminer::StateDeterminer() : estimator(SIGMA_GYRO, SIGMA_ACCEL, SIGMA_BA
 {
     main_attempted = false;
     curr_state = state::POWER_ON;
-    first_step = false;
 }
 
 StateDeterminer::~StateDeterminer()
