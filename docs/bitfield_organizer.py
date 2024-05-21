@@ -17,7 +17,13 @@ HEADER_FIELD = 0
 WORD_SIZE = 64
 
 
-def distribute_bitfields(bitfields, max_value_per_bucket, swap_indices=None, insert_indices=None, swap_first=False):
+def distribute_bitfields(
+    bitfields,
+    max_value_per_bucket,
+    swap_indices=None,
+    insert_indices=None,
+    swap_first=False,
+):
     # sort bit field values in descending order
     sorted_bitfields = sorted(bitfields, key=lambda x: x[1], reverse=True)
     before_swaps = deepcopy(sorted_bitfields)
@@ -110,14 +116,14 @@ def distribute_bitfields(bitfields, max_value_per_bucket, swap_indices=None, ins
 
 # list of bitfields and their values, replace with your bitfields as needed
 bitfield_list = [
-    ("gps coord: lat", 28),
+    ("gps coord: lat", 28),  # takes into account single sign bit
     ("gps fix", 1),
     ("external temp", 11),
     ("internal temp: avbay", 11),
     ("internal temp: engine bay", 11),
     ("gps signal quality", 2),
     ("gps antenna status", 2),
-    ("gps coord: long", 29),
+    ("gps coord: long", 29),  # takes into account single sign bit
     ("failure flag", 10),
     ("gps altitude", 15),
     ("altitude", 15),
@@ -134,26 +140,24 @@ bitfield_list = [
     ("gps speed", 10),
     ("gps link", 3),
     ("state", 4),
-    ("time", 19),
+    ("time", 25),
 ]
 
 swapper = [
     (13, 22),
 ]
 
-inserter = [
-    (20, 0),
-    (21, 0),
-    (21, 6),
-    (9, 6),
-    (12, 11),
-    (23, 11)
-]
+inserter = [(20, 0), (21, 0), (18, 6), (20, 7), (20, 11), (23, 12), (22, 13), (24, 18)]
 
-bitfield_vals, bitfield_names = distribute_bitfields(bitfield_list, WORD_SIZE, swapper, inserter)
+
+bitfield_vals, bitfield_names = distribute_bitfields(
+    bitfield_list, WORD_SIZE, swapper, inserter
+)
 
 print()
-print(f"NOTE: THE FOLLOWING IS A SUGGESTION AS TO HOW TO ORGANIZE THE BITFIELD, IT IS RECOMMENDED THAT YOU SWITCH FIELD POSITIONS AS YOU SEE FIT")
+print(
+    f"NOTE: THE FOLLOWING IS A SUGGESTION AS TO HOW TO ORGANIZE THE BITFIELD, IT IS RECOMMENDED THAT YOU SWITCH FIELD POSITIONS AS YOU SEE FIT"
+)
 print(f"Arrange your {WORD_SIZE} bit words according to the buckets shown below:")
 print("-------------------------------------------------------------------")
 # used gpt for this printing part
@@ -163,3 +167,5 @@ for i, (vals, names) in enumerate(zip(bitfield_vals, bitfield_names)):
     print(
         f"Bucket {i + 1}: {vals}{' ' * (len(str(bitfield_vals)) - 80 - len(str(vals)))}  {names}"
     )
+
+# ngl this tool is really confusing and maybe a little bad

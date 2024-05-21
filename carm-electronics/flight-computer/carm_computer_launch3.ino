@@ -176,12 +176,11 @@ void loop()
         bboard_manager.gps_num_satellites = (int)GPS.satellites;
         bboard_manager.gps_antenna_status = (int)GPS.antenna;
     }
-
     state_determiner.determineState(bboard_manager);
     bboard_manager.writeSensorData(launch_data, error_data);
 
     switchSPIDevice(RFM95_CS);
     unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-    uint64_t[5] launchmode_words = {pack_launchmode(launchmode_d)};
+    uint64_t[5] launchmode_words = {pack_noschema(launchmode_d)};
     transmit(rf95, launchmode_words, 5);
 }

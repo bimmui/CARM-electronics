@@ -253,3 +253,75 @@ uint64_t *pack_recovery(unsigned int transformed_data[])
 
     return raw_words;
 }
+
+uint64_t *pack_noschema(unsigned int transformed_data[])
+{
+    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    unsigned bit_count = MAX_WORD_SIZE;
+
+    raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
+                                transformed_data[0]);
+    raw_words[0] = Bitpack_newu(raw_words[0], 3, bit_count -= 3,
+                                transformed_data[1]);
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 11,
+                                transformed_data[2]);
+    raw_words[0] = Bitpack_newu(raw_words[0], 28, bit_count -= 28,
+                                transformed_data[3]);
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 1,
+                                transformed_data[4]);
+    raw_words[0] = Bitpack_newu(raw_words[0], 27, bit_count -= 27,
+                                transformed_data[5]);
+
+    // reset bit_count for the next 64-bit word we're gonna pack
+    bit_count = MAX_WORD_SIZE;
+    raw_words[1] = Bitpack_newu(raw_words[1], 25, bit_count -= 25,
+                                transformed_data[10]);
+    raw_words[1] = Bitpack_newu(raw_words[1], 20, bit_count -= 20,
+                                transformed_data[6]);
+    raw_words[1] = Bitpack_newu(raw_words[1], 10, bit_count -= 10,
+                                transformed_data[22]);
+    raw_words[1] = Bitpack_newu(raw_words[1], 9, bit_count -= 9,
+                                transformed_data[15]);
+
+    bit_count = MAX_WORD_SIZE;
+    raw_words[2] = Bitpack_newu(raw_words[2], 20, bit_count -= 20,
+                                transformed_data[9]);
+    raw_words[2] = Bitpack_newu(raw_words[2], 17, bit_count -= 17,
+                                transformed_data[11]);
+    raw_words[2] = Bitpack_newu(raw_words[2], 15, bit_count -= 15,
+                                transformed_data[7]);
+    raw_words[2] = Bitpack_newu(raw_words[2], 10, bit_count -= 10,
+                                transformed_data[23]);
+    raw_words[2] = Bitpack_newu(raw_words[2], 2, bit_count -= 2,
+                                transformed_data[13]);
+
+    bit_count = MAX_WORD_SIZE;
+    raw_words[3] = Bitpack_newu(raw_words[3], 11, bit_count -= 11,
+                                transformed_data[21]);
+    raw_words[3] = Bitpack_newu(raw_words[3], 15, bit_count -= 15,
+                                transformed_data[12]);
+    raw_words[3] = Bitpack_newu(raw_words[3], 15, bit_count -= 15,
+                                transformed_data[24]);
+    raw_words[3] = Bitpack_newu(raw_words[3], 11, bit_count -= 11,
+                                transformed_data[14]);
+    raw_words[3] = Bitpack_newu(raw_words[3], 11, bit_count -= 11,
+                                transformed_data[16]);
+    raw_words[3] = Bitpack_newu(raw_words[3], 1, bit_count -= 1,
+                                transformed_data[26]);
+
+    bit_count = MAX_WORD_SIZE;
+    raw_words[4] = Bitpack_newu(raw_words[4], 11, bit_count -= 11,
+                                transformed_data[17]);
+    raw_words[4] = Bitpack_newu(raw_words[4], 11, bit_count -= 11,
+                                transformed_data[18]);
+    raw_words[4] = Bitpack_newu(raw_words[4], 11, bit_count -= 11,
+                                transformed_data[20]);
+    raw_words[4] = Bitpack_newu(raw_words[4], 9, bit_count -= 9,
+                                transformed_data[8]);
+    raw_words[4] = Bitpack_newu(raw_words[4], 11, bit_count -= 11,
+                                transformed_data[19]);
+    raw_words[4] = Bitpack_newu(raw_words[4], 2, bit_count -= 2,
+                                transformed_data[25]);
+
+    return raw_words;
+}

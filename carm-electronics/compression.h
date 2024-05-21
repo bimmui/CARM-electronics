@@ -24,4 +24,6 @@ uint64_t *pack_launchmode(unsigned int transformed_data[]);
 
 uint64_t *pack_recovery(unsigned int transformed_data[]);
 
+uint64_t *pack_noschema(unsigned int transformed_data[]);
+
 #endif
