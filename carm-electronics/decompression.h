@@ -24,4 +24,6 @@ unsigned int *unpack_launchmode(uint64_t *launchmode_data);
 
 unsigned int *unpack_recovery(uint64_t *recovery_data);
 
+unsigned int *unpack_noschema(uint64_t *data);
+
 #endif

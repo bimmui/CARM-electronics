@@ -80,9 +80,7 @@ bool check_bit(int n, int p)
 void transmit(RH_RF95 rf96, uint64_t packet[], uint8_t packet_len)
 {
     uint64_t temp_packet[packet_len];
-    delay(10);
     rf96.send((uint8_t *)packet, sizeof(temp_packet));
-    delay(10);
     rf96.waitPacketSent();
 }
 

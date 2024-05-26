@@ -45,19 +45,19 @@ void switchSPIDevice(int cs_pin)
     }
 }
 
-void createAPRSPacket(char *buffer, int lat_degree_minutes, char lat_dir,
-                      int lon_degree_minutes, char lon_dir,
-                      double speed, double course, int altitude)
+void createAPRSPacket(char *buffer, float lat_degree_minutes, char lat_dir,
+                      float lon_degree_minutes, char lon_dir,
+                      float speed, float course, int altitude)
 {
 
     // make APRS information field using degree-minute format
     char info_field[100];
-    snprintf(info_field, sizeof(info_field), "!%08.2f%c/%09.2f%c>%06.2f/%06.02f /A=%06d",
+    snprintf(info_field, sizeof(info_field), "!%10.4f%c/%11.4f%c>%06.2f/%06.02f /A=%06d",
              lat_degree_minutes, lat_dir,
              lon_degree_minutes, lon_dir,
              course, speed, altitude);
 
-    // formating the control field and protocol id
+    // formatting the control field and protocol id
     char cf_pi[2];
     sprintf(cf_pi, "%x%x", control_field, protocol_id);
 
@@ -66,8 +66,8 @@ void createAPRSPacket(char *buffer, int lat_degree_minutes, char lat_dir,
     snprintf(fcs_str, sizeof(fcs_str), "%02x", fcs);
 
     // encode AX.25 frame
-    sprintf(buffer, "~%s>%s,%s:%s %s~",
-            callsign, destination_callsign, cf_pi, info_field, fcs_str);
+    snprintf(buffer, 255, "~%s>%s,%s:%s %s~",
+             callsign, destination_callsign, cf_pi, info_field, fcs_str);
 }
 
 void setup()
@@ -162,7 +162,7 @@ void setup()
             for (int i = 0, i < 5; i++)
             {
                 char init_success_packet[] = "Hello ground station!";
-                rf95.send((uint8_t *)init_success_packet, strlen(init_success_packet) + 1);
+                rf95.send((uint8_t *)init_success_packet, sizeof(init_success_packet) + 1);
                 rf95.waitPacketSent();
             }
         }
@@ -213,8 +213,15 @@ void loop()
     switchSPIDevice(RFM95_CS);
     unsigned int *launchmode_d = transform_launchmode(bboard_manager);
     uint64_t[5] launchmode_words = {pack_noschema(launchmode_d)};
-    transmit(rf95, launchmode_words, 5);
+    rf95.send((uint8_t *)launchmode_words, sizeof(launchmode_words));
+    rf95.waitPacketSent();
 
-    char ax25_buffer[256];
-    createAPRSPacket()
+    // following APRS AX.25 protocol to transmit to MCC
+    char ax25_buffer[255];
+    createAPRSPacket(ax25_buffer, static_cast<float>(GPS.latitude), GPS.lat,
+                     static_cast<float>(GPS.longitude), GPS.lon,
+                     static_cast<float>(GPS.speed),
+                     static_cast<float>(GPS.angle), (int)GPS.altitude);
+    rf95.send((uint8_t *)ax25_buffer, sizeof(ax25_buffer) + 1);
+    rf95.waitPacketSent();
 }

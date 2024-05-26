@@ -34,4 +34,6 @@ launchmodedata untransform_launchmode(unsigned int *data);
 
 recoverydata untransform_recovery(unsigned int *data);
 
+launchmodedata untransform_noschema(unsigned int *data);
+
 #endif

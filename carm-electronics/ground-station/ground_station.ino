@@ -12,21 +12,29 @@
  **************************************************************/
 
 #include <RH_RF95.h>
-#include "StateDetermination.h"
 #include "DLTransforms.h"
 #include "untransformed.h"
 #include "decompression.h"
+
+#if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
+#define RFM95_CS 8
+#define RFM95_INT 3
+#define RFM95_RST 4
+
+#endif
+
+#define RF95_FREQ 433.0
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Initializing revelant objects and structs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Singleton instance of the radio driver
-RH_RF95 rf95(RFM96_CS, RFM96_INT);
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Function contracts
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-uint16_to_binary_string(uint16_t num, char *result);
+void uint16_to_binary_string(uint16_t num, char *result);
 
 void setup()
 {
@@ -76,48 +84,70 @@ void setup()
 
 void loop()
 {
-    uint64_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint64_t buf[5];
     uint8_t len = sizeof(buf);
 
     Serial.println("Waiting for reply...");
     if (rf95.waitAvailableTimeout(1000))
     {
         // Should be a reply message for us now
-        if (rf95.recv(buf, &len))
+        if (rf95.recv((uint8_t *)buf, &len))
         {
             // the first word will always have the state in the first four bits
-            unsigned int *launchmode_d = unpack_launchmode(buf[0]);
-            launchmodedata launchmode_stuct = unpack_launchmode(launchmode_d); // TODO: rename the var
+            unsigned int *launchmode_d = unpack_noschema(buf);
+            launchmodedata launchdata = untransform_launchmode(launchmode_d); // TODO: rename the var
 
             // Print all the data to serial so the parser can read it and send it to the db and dashboard
-            Serial.println(launchready_stuct.curr_state);
-            Serial.println(launchready_stuct.gps_num_satellites);
-            Serial.println(launchready_stuct.gps_long);
-            Serial.println(launchready_stuct.gps_lat);
-            Serial.println(launchready_stuct.gyro_x);
-            Serial.println(launchready_stuct.accel_y);
-            Serial.println(launchready_stuct.gyro_y);
-            Serial.println(launchready_stuct.vert_velo);
-            Serial.println(launchready_stuct.gyro_z);
+            Serial.print(launchdata.curr_state);
+            Serial.print(",");
+            Serial.print(launchdata.gps_num_satellites);
+            Serial.print(",");
+            Serial.print(launchdata.gps_long);
+            Serial.print(",");
+            Serial.print(launchdata.gps_lat);
+            Serial.print(",");
+            Serial.print(launchdata.gyro_x);
+            Serial.print(",");
+            Serial.print(launchdata.accel_y);
+            Serial.print(",");
+            Serial.print(launchdata.gyro_y);
+            Serial.print(",");
+            Serial.print(launchdata.vert_velo);
+            Serial.print(",");
+            Serial.print(launchdata.gyro_z);
+            Serial.print(",");
 
-            Serial.println(launchready_stuct.accel_x);
-            Serial.println(launchready_stuct.altitude);
-            Serial.println(launchready_stuct.gps_fix);
-            Serial.println(launchready_stuct.external_temp);
-            Serial.println(launchready_stuct.temperature_avbay);
-            Serial.println(launchready_stuct.accel_z);
-            Serial.println(launchready_stuct.mag_y);
-            Serial.println(launchready_stuct.mag_z);
+            Serial.print(launchdata.accel_x);
+            Serial.print(",");
+            Serial.print(launchdata.altitude);
+            Serial.print(",");
+            Serial.print(launchdata.gps_fix);
+            Serial.print(",");
+            Serial.print(launchdata.external_temp);
+            Serial.print(",");
+            Serial.print(launchdata.temperature_avbay);
+            Serial.print(",");
+            Serial.print(launchdata.accel_z);
+            Serial.print(",");
+            Serial.print(launchdata.mag_y);
+            Serial.print(",");
+            Serial.print(launchdata.mag_z);
+            Serial.print(",");
 
             char failures_bits_str[17];
-            uint16_to_binary_string(launchready_stuct.failures, &failures_bits_str);
-            Serial.println(failures_bits_str);
+            uint16_to_binary_string(launchdata.failures, failures_bits_str);
+            Serial.print(failures_bits_str);
+            Serial.print(",");
 
-            Serial.println(launchready_stuct.gps_speed);
-            Serial.println(launchready_stuct.gps_altitude);
-            Serial.println(launchready_stuct.gps_quality);
-            Serial.println(launchready_stuct.temperature_engbay);
-            Serial.println(launchready_stuct.gps_antenna_status);
+            Serial.print(launchdata.gps_speed);
+            Serial.print(",");
+            Serial.print(launchdata.gps_altitude);
+            Serial.print(",");
+            Serial.print(launchdata.gps_quality);
+            Serial.print(",");
+            Serial.print(launchdata.temperature_engbay);
+            Serial.print(",");
+            Serial.println(launchdata.gps_antenna_status);
         }
     }
 }
