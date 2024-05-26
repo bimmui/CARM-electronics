@@ -31,5 +31,6 @@ bool check_bit(int n, int p);
 void transmit(RH_RF95 rf96, uint64_t packet[], uint8_t packet_len);
 uint64_t *receive(RH_RF95 rf96, uint8_t packet_len);
 state get_state_from_bits(uint64_t packet);
+unsigned short fcs_calc(unsigned char *data, int len);
 
 #endif

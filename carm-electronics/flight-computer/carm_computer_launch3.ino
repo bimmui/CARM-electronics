@@ -5,12 +5,29 @@
 #include "Adafruit_BMP3XX.h"  // BMP module
 #include "Adafruit_MCP9808.h" // Temp sensor module
 #include <Adafruit_GPS.h>     // GPS module
+#include <RH_RF95.h>
 #include "def.h"
 #include "utils.h"
 #include "BBManager.h"
 #include "BBsetup.h"
 #include "DLTransforms.h"
 #include "compression.h"
+
+Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();               // imu
+Adafruit_BMP3XX bmp;                                     // barometric pressure sensor
+Adafruit_MCP9808 tempsensor_avbay = Adafruit_MCP9808();  // avionics bay thermocouple
+Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808(); // engine bay thermocouple
+Adafruit_GPS GPS(&GPSSerial);                            // hardware GPS object
+File launch_data;                                        // file object for writing data
+File error_data;                                         // file object for errors
+BBManager bboard_manager = BBManager();
+StateDeterminer state_determiner = StateDeterminer();
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+const char *callsign = "KC1SIL";
+const char *destination_callsign = "APRS"; // generic destination SSID
+const int control_field = 0x03;
+const int protocol_id = 0xF0;
 
 void switchSPIDevice(int cs_pin)
 {
@@ -28,16 +45,30 @@ void switchSPIDevice(int cs_pin)
     }
 }
 
-Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();               // imu
-Adafruit_BMP3XX bmp;                                     // barometric pressure sensor
-Adafruit_MCP9808 tempsensor_avbay = Adafruit_MCP9808();  // avionics bay thermocouple
-Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808(); // engine bay thermocouple
-Adafruit_GPS GPS(&GPSSerial);                            // hardware GPS object
-File launch_data;                                        // file object for writing data
-File error_data;                                         // file object for errors
-BBManager bboard_manager = BBManager();
-StateDeterminer state_determiner = StateDeterminer();
-RH_RF95 rf95(RFM95_CS, RFM95_INT);
+void createAPRSPacket(char *buffer, int lat_degree_minutes, char lat_dir,
+                      int lon_degree_minutes, char lon_dir,
+                      double speed, double course, int altitude)
+{
+
+    // make APRS information field using degree-minute format
+    char info_field[100];
+    snprintf(info_field, sizeof(info_field), "!%08.2f%c/%09.2f%c>%06.2f/%06.02f /A=%06d",
+             lat_degree_minutes, lat_dir,
+             lon_degree_minutes, lon_dir,
+             course, speed, altitude);
+
+    // formating the control field and protocol id
+    char cf_pi[2];
+    sprintf(cf_pi, "%x%x", control_field, protocol_id);
+
+    unsigned short fcs = fcs_calc((unsigned char *)info_field, 100);
+    char fcs_str[2];
+    snprintf(fcs_str, sizeof(fcs_str), "%02x", fcs);
+
+    // encode AX.25 frame
+    sprintf(buffer, "~%s>%s,%s:%s %s~",
+            callsign, destination_callsign, cf_pi, info_field, fcs_str);
+}
 
 void setup()
 {
@@ -183,4 +214,7 @@ void loop()
     unsigned int *launchmode_d = transform_launchmode(bboard_manager);
     uint64_t[5] launchmode_words = {pack_noschema(launchmode_d)};
     transmit(rf95, launchmode_words, 5);
+
+    char ax25_buffer[256];
+    createAPRSPacket()
 }
