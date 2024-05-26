@@ -1,5 +1,8 @@
 #include <Adafruit_GPS.h>
 #include <RH_RF95.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0) // Feather M0 w/Radio
 #define RFM95_CS 8
@@ -10,6 +13,7 @@
 
 #define GPSSerial Serial1
 #define RF95_FREQ 434.0
+#define GPSECHO false
 
 Adafruit_GPS GPS(&GPSSerial);
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -78,17 +82,18 @@ unsigned short fcs_calc(unsigned char *data, int len)
     return (crc ^ 0xffff);
 }
 
-void createAPRSPacket(char *buffer, int lat_degree_minutes, char lat_dir,
-                      int lon_degree_minutes, char lon_dir,
-                      double speed, double course, int altitude)
+void createAPRSPacket(char *buffer, float lat_degree_minutes, char lat_dir,
+                      float lon_degree_minutes, char lon_dir,
+                      float speed, float course, int altitude)
 {
 
     // make APRS information field using degree-minute format
     char info_field[100];
-    snprintf(info_field, sizeof(info_field), "!%08.2f%c/%09.2f%c>%06.2f/%06.02f /A=%06d",
+    snprintf(info_field, sizeof(info_field), "!%10.4f%c/%11.4f%c>%06.2f/%06.02f /A=%06d",
              lat_degree_minutes, lat_dir,
              lon_degree_minutes, lon_dir,
              course, speed, altitude);
+    // Serial.println(info_field);
 
     // formating the control field and protocol id
     char cf_pi[2];
@@ -99,14 +104,16 @@ void createAPRSPacket(char *buffer, int lat_degree_minutes, char lat_dir,
     snprintf(fcs_str, sizeof(fcs_str), "%02x", fcs);
 
     // encode AX.25 frame
-    sprintf(buffer, "~%s>%s,%s:%s %s~",
-            callsign, destination_callsign, cf_pi, info_field, fcs_str);
+    snprintf(buffer, 255, "~%s>%s,%s:%s %s~",
+             callsign, destination_callsign, cf_pi, info_field, fcs_str);
 }
 
 void setup()
 {
     // GPS setup
     Serial.begin(115200);
+    while (!Serial)
+        delay(1);
     Serial.println("Adafruit GPS library basic parsing test!");
     GPS.begin(9600);
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -148,7 +155,6 @@ void loop()
     char c = GPS.read();
     if (GPS.newNMEAreceived())
     {
-        Serial.print(GPS.lastNMEA());
         if (!GPS.parse(GPS.lastNMEA()))
             return;
     }
@@ -157,9 +163,22 @@ void loop()
     {
         if (GPS.fix)
         {
-            char ax25_buffer[256];
-            createAPRSPacket(ax25_buffer, GPS.latitude, GPS.lat, GPS.longitude, GPS.lon, GPS.speed, GPS.angle, GPS.altitude);
-            rf95.send((uint8_t *)ax25_buffer, sizeof(ax25_buffer));
+            char ax25_buffer[255];
+            createAPRSPacket(ax25_buffer, static_cast<float>(GPS.latitude), GPS.lat, static_cast<float>(GPS.longitude), GPS.lon, static_cast<float>(GPS.speed), static_cast<float>(GPS.angle), (int)GPS.altitude);
+            Serial.println(ax25_buffer);
+            // Serial.print(GPS.latitude, 4);
+            // Serial.print(GPS.lat);
+            // Serial.print(", ");
+            // Serial.print(GPS.longitude, 4);
+            // Serial.println(GPS.lon);
+            // Serial.print("Speed (knots): ");
+            // Serial.println(GPS.speed);
+            // Serial.print("Angle: ");
+            // Serial.println(GPS.angle);
+            // Serial.print("Altitude: ");
+            // Serial.println(GPS.altitude);
+            rf95.send((uint8_t *)ax25_buffer, sizeof(ax25_buffer) + 1);
+            rf95.waitPacketSent();
         }
     }
 }
