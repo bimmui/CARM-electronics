@@ -67,7 +67,7 @@ uint64_t *pack_launchready(unsigned int transformed_data[])
                                 transformed_data[0]);
     raw_words[0] = Bitpack_newu(raw_words[0], 3, bit_count -= 3,
                                 transformed_data[1]);
-    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 11,
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 1,
                                 transformed_data[2]);
     raw_words[0] = Bitpack_newu(raw_words[0], 28, bit_count -= 28,
                                 transformed_data[3]);
@@ -145,7 +145,7 @@ uint64_t *pack_launchmode(unsigned int transformed_data[])
                                 transformed_data[0]);
     raw_words[0] = Bitpack_newu(raw_words[0], 3, bit_count -= 3,
                                 transformed_data[1]);
-    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 11,
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 1,
                                 transformed_data[2]);
     raw_words[0] = Bitpack_newu(raw_words[0], 28, bit_count -= 28,
                                 transformed_data[3]);
@@ -225,7 +225,7 @@ uint64_t *pack_recovery(unsigned int transformed_data[])
                                 transformed_data[0]);
     raw_words[0] = Bitpack_newu(raw_words[0], 3, bit_count -= 3,
                                 transformed_data[1]);
-    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 11,
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 1,
                                 transformed_data[2]);
     raw_words[0] = Bitpack_newu(raw_words[0], 28, bit_count -= 28,
                                 transformed_data[3]);
@@ -263,7 +263,7 @@ uint64_t *pack_noschema(unsigned int transformed_data[])
                                 transformed_data[0]);
     raw_words[0] = Bitpack_newu(raw_words[0], 3, bit_count -= 3,
                                 transformed_data[1]);
-    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 11,
+    raw_words[0] = Bitpack_newu(raw_words[0], 1, bit_count -= 1,
                                 transformed_data[2]);
     raw_words[0] = Bitpack_newu(raw_words[0], 28, bit_count -= 28,
                                 transformed_data[3]);

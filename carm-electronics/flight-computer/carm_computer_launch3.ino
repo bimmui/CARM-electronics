@@ -212,7 +212,7 @@ void loop()
 
     switchSPIDevice(RFM95_CS);
     unsigned int *launchmode_d = transform_launchmode(bboard_manager);
-    uint64_t[5] launchmode_words = {pack_noschema(launchmode_d)};
+    uint64_t *launchmode_words = pack_noschema(launchmode_d);
     rf95.send((uint8_t *)launchmode_words, sizeof(launchmode_words));
     rf95.waitPacketSent();
 

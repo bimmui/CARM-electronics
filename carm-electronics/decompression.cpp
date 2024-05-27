@@ -60,7 +60,7 @@ unsigned int *unpack_launchready(uint64_t *launchready_data)
     // word 1
     unpacked_values[0] = Bitpack_getu(launchready_data[0], 4, bit_count -= 4);
     unpacked_values[1] = Bitpack_getu(launchready_data[0], 3, bit_count -= 3);
-    unpacked_values[2] = Bitpack_getu(launchready_data[0], 1, bit_count -= 11);
+    unpacked_values[2] = Bitpack_getu(launchready_data[0], 1, bit_count -= 1);
     unpacked_values[3] = Bitpack_getu(launchready_data[0], 28, bit_count -= 28);
     unpacked_values[4] = Bitpack_getu(launchready_data[0], 1, bit_count -= 1);
     unpacked_values[5] = Bitpack_getu(launchready_data[0], 27, bit_count -= 27);
@@ -118,7 +118,7 @@ unsigned int *unpack_launchmode(uint64_t *launchmode_data)
     // word 1
     unpacked_values[0] = Bitpack_getu(launchmode_data[0], 4, bit_count -= 4);
     unpacked_values[1] = Bitpack_getu(launchmode_data[0], 3, bit_count -= 3);
-    unpacked_values[2] = Bitpack_getu(launchmode_data[0], 1, bit_count -= 11);
+    unpacked_values[2] = Bitpack_getu(launchmode_data[0], 1, bit_count -= 1);
     unpacked_values[3] = Bitpack_getu(launchmode_data[0], 28, bit_count -= 28);
     unpacked_values[4] = Bitpack_getu(launchmode_data[0], 1, bit_count -= 1);
     unpacked_values[5] = Bitpack_getu(launchmode_data[0], 27, bit_count -= 27);
@@ -175,7 +175,7 @@ unsigned int *unpack_recovery(uint64_t *recovery_data)
     // word 1
     unpacked_values[0] = Bitpack_getu(recovery_data[0], 4, bit_count -= 4);
     unpacked_values[1] = Bitpack_getu(recovery_data[0], 3, bit_count -= 3);
-    unpacked_values[2] = Bitpack_getu(recovery_data[0], 1, bit_count -= 11);
+    unpacked_values[2] = Bitpack_getu(recovery_data[0], 1, bit_count -= 1);
     unpacked_values[3] = Bitpack_getu(recovery_data[0], 28, bit_count -= 28);
     unpacked_values[4] = Bitpack_getu(recovery_data[0], 1, bit_count -= 1);
     unpacked_values[5] = Bitpack_getu(recovery_data[0], 27, bit_count -= 27);
@@ -203,7 +203,7 @@ unsigned int *unpack_noschema(uint64_t *data)
     // word 1
     unpacked_values[0] = Bitpack_getu(data[0], 4, bit_count -= 4);
     unpacked_values[1] = Bitpack_getu(data[0], 3, bit_count -= 3);
-    unpacked_values[2] = Bitpack_getu(data[0], 1, bit_count -= 11);
+    unpacked_values[2] = Bitpack_getu(data[0], 1, bit_count -= 1);
     unpacked_values[3] = Bitpack_getu(data[0], 28, bit_count -= 28);
     unpacked_values[4] = Bitpack_getu(data[0], 1, bit_count -= 1);
     unpacked_values[5] = Bitpack_getu(data[0], 27, bit_count -= 27);
