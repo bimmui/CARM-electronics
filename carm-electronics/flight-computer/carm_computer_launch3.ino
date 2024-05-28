@@ -13,13 +13,14 @@
 #include "DLTransforms.h"
 #include "compression.h"
 
-Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();               // imu
-Adafruit_BMP3XX bmp;                                     // barometric pressure sensor
-Adafruit_MCP9808 tempsensor_avbay = Adafruit_MCP9808();  // avionics bay thermocouple
-Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808(); // engine bay thermocouple
-Adafruit_GPS GPS(&GPSSerial);                            // hardware GPS object
-File launch_data;                                        // file object for writing data
-File error_data;                                         // file object for errors
+Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();                 // imu
+Adafruit_BMP3XX bmp;                                       // barometric pressure sensor
+Adafruit_MCP9808 tempsensor_avbay = Adafruit_MCP9808();    // avionics bay temp sensor
+Adafruit_MCP9808 tempsensor_exterior = Adafruit_MCP9808(); // external temp sensor
+Adafruit_MCP9808 tempsensor_engbay = Adafruit_MCP9808();   // engine bay temp sensor
+Adafruit_GPS GPS(&GPSSerial);                              // hardware GPS object
+File launch_data;                                          // file object for writing data
+File error_data;                                           // file object for errors
 BBManager bboard_manager = BBManager();
 StateDeterminer state_determiner = StateDeterminer();
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -74,8 +75,8 @@ void setup()
 {
     bool imu_setup = setup_IMU(lsm);
     bool bmp_setup = setup_BMP(bmp);
-    bool temp_setup1 = setup_tempsens(tempsensor_avbay, 0x18);
-    bool temp_setup2 = setup_tempsens(tempsensor_engbay, 0x19);
+    bool temp_setup1 = setup_tempsens(tempsensor_avbay, 0x19);
+    bool temp_setup2 = setup_tempsens(tempsensor_exterior, 0x18);
     GPS.begin(9600);
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
@@ -110,7 +111,7 @@ void setup()
             init_fails = flip_bit(init_fails, 3, 1);
         }
 
-        if (temp_setup1)
+        if (temp_setup2)
         {
             init_info.println("External temp. successfully set up");
         }
@@ -120,14 +121,14 @@ void setup()
             init_fails = flip_bit(init_fails, 4, 1);
         }
 
-        if (temp_setup2)
+        if (temp_setup1)
         {
             init_info.println("Avionics bay temp. successfully set up");
         }
         else
         {
             init_info.println("Avionics bay temp. unsuccessfully set up");
-            init_fails = flip_bit(init_fails, 5, 1);
+            init_fails = flip_bit(init_fails, 0, 1);
         }
         init_info.println("----------------------------------------------------------------------------");
         init_info.close();

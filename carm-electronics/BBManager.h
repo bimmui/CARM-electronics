@@ -78,10 +78,11 @@ public:
     float baro_offset;
 
 private:
-    Adafruit_LSM9DS1 *lsm;               // imu
-    Adafruit_BMP3XX *bmp;                // barometric pressure sensor
-    Adafruit_MCP9808 *tempsensor_avbay;  // avionics bay thermocouple
-    Adafruit_MCP9808 *tempsensor_engbay; // engine bay thermocouple
+    Adafruit_LSM9DS1 *lsm;                 // imu
+    Adafruit_BMP3XX *bmp;                  // barometric pressure sensor
+    Adafruit_MCP9808 *tempsensor_avbay;    // avionics bay temp sens
+    Adafruit_MCP9808 *tempsensor_engbay;   // engine bay temp sens
+    Adafruit_MCP9808 *tempsensor_external; // external temp sens
     // Adafruit_GPS *gps;                   // gps module
 };
 

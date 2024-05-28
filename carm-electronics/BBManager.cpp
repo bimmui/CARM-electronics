@@ -41,6 +41,9 @@ BBManager::BBManager()
     curr_state = state::POWER_ON;
     failure_flags = 0;
     curr_launch_time = 0;
+    temperature_engbay = 0;
+    external_temp = 0;
+    temperature_avbay = 0;
 }
 
 void BBManager::initDatalog(File &file_stream)
@@ -129,7 +132,7 @@ void BBManager::setSensors(Adafruit_LSM9DS1 &lsm_obj, Adafruit_BMP3XX &bmp_obj,
     lsm = &lsm_obj;
     bmp = &bmp_obj;
     tempsensor_avbay = &tempsensor_obj1;
-    tempsensor_engbay = &tempsensor_obj2;
+    tempsensor_external = &tempsensor_obj2;
     // Serial.println(reinterpret_cast<intptr_t>(*gps));
 }
 
@@ -170,7 +173,7 @@ void BBManager::readSensorData()
     }
 
     temperature_avbay = tempsensor_avbay->readTempC();
-    temperature_engbay = tempsensor_engbay->readTempC();
+    external_temp = tempsensor_external->readTempC();
     accel_x = a.acceleration.x;
     accel_y = a.acceleration.y;
     accel_z = a.acceleration.z;
@@ -202,6 +205,8 @@ void BBManager::writeSensorData(File &data_stream, File &error_stream)
         Serial.print(external_temp, DECIMAL_COUNT);
         Serial.print(",");
         Serial.print(temperature_engbay, DECIMAL_COUNT);
+        Serial.print(",");
+        Serial.print(temperature_avbay, DECIMAL_COUNT);
         Serial.print(",");
         Serial.print(barometer_temp, DECIMAL_COUNT);
         Serial.print(",");
