@@ -22,7 +22,7 @@ const float ACCEL_XY_SPACING = 0.0489236790607;
 const float MAG_FORCE_SPACING = 0.0195694716243;
 const float GYRO_XY_SPACING = 0.0027465846506;
 const float GYRO_Z_SPACING = 0.00549320597234;
-const float GPS_SPEED_SPACING = 0.0999481185339;
+const float GPS_SPEED_SPACING = 0.0684261974585;
 
 /*
  * serialize_dlt
@@ -159,7 +159,7 @@ unsigned int *transform_launchready(BBManager bbman)
   transformed_values[11] = serialize_dlt(9, 0, 25, bbman.accel_x, ACCEL_XY_SPACING);
 
   // ALTITUDE MEASUREMENTS
-  transformed_values[12] = serialize_dlt(15, 0, 3275, bbman.accel_x, ALTITUDE_SPACING);
+  transformed_values[12] = serialize_dlt(15, 0, 3275, bbman.altitude, ALTITUDE_SPACING);
 
   // GPS FIX
   transformed_values[13] = static_cast<unsigned int>(bbman.gps_fix);
@@ -277,7 +277,7 @@ unsigned int *transform_launchmode(BBManager bbman)
   transformed_values[11] = serialize_dlt(17, -360, 360, bbman.gyro_z, GYRO_Z_SPACING);
 
   // ALTITUDE MEASUREMENTS
-  transformed_values[12] = serialize_dlt(15, 0, 3275, bbman.accel_x, ALTITUDE_SPACING);
+  transformed_values[12] = serialize_dlt(15, 0, 3275, bbman.altitude, ALTITUDE_SPACING);
 
   // GPS ANTENNA STATUS
   transformed_values[13] = static_cast<unsigned int>(bbman.gps_antenna_status);
