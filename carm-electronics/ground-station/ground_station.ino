@@ -24,6 +24,8 @@
 #endif
 
 #define RF95_FREQ 433.0
+static const unsigned DECIMAL_COUNT = 4;
+static const unsigned GPS_DECIMAL_COUNT = 6;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //   Initializing revelant objects and structs
@@ -87,8 +89,7 @@ void loop()
     uint64_t buf[5];
     uint8_t len = sizeof(buf);
 
-    Serial.println("Waiting for reply...");
-    if (rf95.waitAvailableTimeout(1000))
+    if (rf95.available())
     {
         // Should be a reply message for us now
         if (rf95.recv((uint8_t *)buf, &len))
@@ -102,36 +103,36 @@ void loop()
             Serial.print(",");
             Serial.print(launchdata.gps_num_satellites);
             Serial.print(",");
-            Serial.print(launchdata.gps_long);
+            Serial.print(float(launchdata.gps_long / 1000000), GPS_DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.gps_lat);
+            Serial.print(float(launchdata.gps_lat / 1000000), GPS_DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.gyro_x);
+            Serial.print(launchdata.gyro_x, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.accel_y);
+            Serial.print(launchdata.accel_y, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.gyro_y);
+            Serial.print(launchdata.gyro_y, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.vert_velo);
+            Serial.print(launchdata.vert_velo, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.gyro_z);
+            Serial.print(launchdata.gyro_z, DECIMAL_COUNT);
             Serial.print(",");
 
-            Serial.print(launchdata.accel_x);
+            Serial.print(launchdata.accel_x, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.altitude);
+            Serial.print(launchdata.altitude, DECIMAL_COUNT);
             Serial.print(",");
             Serial.print(launchdata.gps_fix);
             Serial.print(",");
-            Serial.print(launchdata.external_temp);
+            Serial.print(launchdata.external_temp, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.temperature_avbay);
+            Serial.print(launchdata.temperature_avbay, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.accel_z);
+            Serial.print(launchdata.accel_z, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.mag_y);
+            Serial.print(launchdata.mag_y, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.mag_z);
+            Serial.print(launchdata.mag_z, DECIMAL_COUNT);
             Serial.print(",");
 
             char failures_bits_str[17];
@@ -139,13 +140,13 @@ void loop()
             Serial.print(failures_bits_str);
             Serial.print(",");
 
-            Serial.print(launchdata.gps_speed);
+            Serial.print(launchdata.gps_speed, DECIMAL_COUNT);
             Serial.print(",");
-            Serial.print(launchdata.gps_altitude);
+            Serial.print(launchdata.gps_altitude, DECIMAL_COUNT);
             Serial.print(",");
             Serial.print(launchdata.gps_quality);
             Serial.print(",");
-            Serial.print(launchdata.temperature_engbay);
+            Serial.print(launchdata.temperature_engbay, DECIMAL_COUNT);
             Serial.print(",");
             Serial.println(launchdata.gps_antenna_status);
         }
