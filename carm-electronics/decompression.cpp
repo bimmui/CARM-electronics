@@ -27,7 +27,7 @@ static const unsigned MAX_WORD_SIZE = 64;
 unsigned int *unpack_poweron(uint64_t poweron_data)
 {
     unsigned bit_count = MAX_WORD_SIZE;
-    unsigned int unpacked_values[8];
+    static unsigned int unpacked_values[8];
 
     unpacked_values[0] = Bitpack_getu(poweron_data, 4, bit_count -= 4);
     unpacked_values[1] = Bitpack_getu(poweron_data, 11, bit_count -= 11);
@@ -53,7 +53,7 @@ unsigned int *unpack_poweron(uint64_t poweron_data)
 unsigned int *unpack_launchready(uint64_t *launchready_data)
 {
     unsigned bit_count = MAX_WORD_SIZE;
-    unsigned int unpacked_values[26];
+    static unsigned int unpacked_values[26];
 
     //! TODO: Test to ensure that receiving a transmitted data returns an array of values
     //              as we expect. If not, everything below is prob wrong
@@ -111,7 +111,7 @@ unsigned int *unpack_launchready(uint64_t *launchready_data)
 unsigned int *unpack_launchmode(uint64_t *launchmode_data)
 {
     unsigned bit_count = MAX_WORD_SIZE;
-    unsigned int unpacked_values[27];
+    static unsigned int unpacked_values[27];
 
     //! TODO: Test to ensure that receiving a transmitted data returns an array of values
     //              as we expect. If not, everything below is prob wrong
@@ -170,7 +170,7 @@ unsigned int *unpack_launchmode(uint64_t *launchmode_data)
 unsigned int *unpack_recovery(uint64_t *recovery_data)
 {
     unsigned bit_count = MAX_WORD_SIZE;
-    unsigned int unpacked_values[13];
+    static unsigned int unpacked_values[13];
 
     // word 1
     unpacked_values[0] = Bitpack_getu(recovery_data[0], 4, bit_count -= 4);
@@ -196,7 +196,7 @@ unsigned int *unpack_recovery(uint64_t *recovery_data)
 unsigned int *unpack_noschema(uint64_t *data)
 {
     unsigned bit_count = MAX_WORD_SIZE;
-    unsigned int unpacked_values[27];
+    static unsigned int unpacked_values[27];
 
     //! TODO: Test to ensure that receiving a transmitted data returns an array of values
     //              as we expect. If not, everything below is prob wrong

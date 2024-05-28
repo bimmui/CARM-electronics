@@ -60,7 +60,7 @@ uint64_t pack_poweron(unsigned int transformed_data[])
  */
 uint64_t *pack_launchready(unsigned int transformed_data[])
 {
-    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    static uint64_t raw_words[5] = {0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
@@ -138,7 +138,7 @@ uint64_t *pack_launchready(unsigned int transformed_data[])
  */
 uint64_t *pack_launchmode(unsigned int transformed_data[])
 {
-    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    static uint64_t raw_words[5] = {0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
@@ -218,7 +218,7 @@ uint64_t *pack_launchmode(unsigned int transformed_data[])
  */
 uint64_t *pack_recovery(unsigned int transformed_data[])
 {
-    static uint64_t raw_words[2] = {0, 0};
+    static uint64_t raw_words[2] = {0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
@@ -256,7 +256,7 @@ uint64_t *pack_recovery(unsigned int transformed_data[])
 
 uint64_t *pack_noschema(unsigned int transformed_data[])
 {
-    static uint64_t raw_words[5] = {0, 0, 0, 0, 0};
+    static uint64_t raw_words[5] = {0};
     unsigned bit_count = MAX_WORD_SIZE;
 
     raw_words[0] = Bitpack_newu(raw_words[0], 4, bit_count -= 4,
