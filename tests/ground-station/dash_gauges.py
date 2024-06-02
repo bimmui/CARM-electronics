@@ -54,7 +54,25 @@ app.layout = dbc.Container(
                         html.Div("Custom Gauge with Plotly"),
                         create_gauge("custom-gauge1", "Speed"),
                         create_gauge("custom-gauge2", "Temperature"),
-                        create_gauge("custom-gauge3", "Pressure"),
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        html.Div("Custom Gauge with Plotly"),
+                        create_gauge("custom-gauge3", "Speed"),
+                        create_gauge("custom-gauge4", "Temperature"),
+                    ]
+                ),
+                dcc.Interval(
+                    id="interval-component",
+                    interval=200,  # Update every 200 milliseconds
+                    n_intervals=0,
+                ),
+                dbc.Col(
+                    [
+                        html.Div("Custom Gauge with Plotly"),
+                        create_gauge("custom-gauge5", "Speed"),
+                        create_gauge("custom-gauge6", "Temperature"),
                     ]
                 ),
                 dcc.Interval(
@@ -75,12 +93,15 @@ app.layout = dbc.Container(
         Output("custom-gauge1", "figure"),
         Output("custom-gauge2", "figure"),
         Output("custom-gauge3", "figure"),
+        Output("custom-gauge4", "figure"),
+        Output("custom-gauge5", "figure"),
+        Output("custom-gauge6", "figure"),
     ],
     [Input("interval-component", "n_intervals")],
 )
 def update_gauges(n):
     # Simulate data update, replace with actual data retrieval
-    new_values = [random.uniform(0, 10) for _ in range(3)]
+    new_values = [random.uniform(0, 10) for _ in range(6)]
     gauges = []
     for value in new_values:
         fig = go.Figure(

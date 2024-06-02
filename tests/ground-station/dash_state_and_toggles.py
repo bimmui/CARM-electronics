@@ -60,6 +60,7 @@ app.layout = html.Div(
                     [
                         html.H4(
                             "Current State",
+                            id="current-state-text",
                             style={"color": "white", "textAlign": "center"},
                         ),
                         dbc.Form(
