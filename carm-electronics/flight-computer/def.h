@@ -35,10 +35,6 @@
 // #define RF96_FREQ_9 423.0
 // #define RF96_FREQ_10 423.0
 
-// Ejection Charge Pin #1 (J1)
-#define EC1 24
-// Ejection Charge Pin #2 (J2)
-#define EC2 23
 // BMP_SCK == SCL
 #define BMP_SCK 18
 // BMP_CS == CS
