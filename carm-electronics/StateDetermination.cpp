@@ -32,7 +32,7 @@ void StateDeterminer::determineState(BBManager &manager)
     //     first_step = true;
     // }
 
-    float accel_data[3] = {manager.accel_x / 9.81, manager.accel_y / 9.81, manager.accel_z / 9.81};
+    float accel_data[3] = {static_cast<float>(manager.accel_x / 9.81), static_cast<float>(manager.accel_y / 9.81), static_cast<float>(manager.accel_z / 9.81)};
     float gyro_data[3] = {manager.gyro_x, manager.gyro_y, manager.gyro_z};
     estimator.estimate(accel_data, gyro_data, manager.altitude, manager.curr_launch_time);
 

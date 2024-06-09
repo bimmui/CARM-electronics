@@ -160,7 +160,7 @@ void setup()
             Serial.print("Set Freq to: ");
             Serial.println(RF95_FREQ_2);
             rf95.setTxPower(23, false);
-            for (int i = 0, i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 char init_success_packet[] = "Hello ground station!";
                 rf95.send((uint8_t *)init_success_packet, sizeof(init_success_packet) + 1);
