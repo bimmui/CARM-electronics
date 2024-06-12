@@ -14,7 +14,7 @@ from dash.dependencies import Input, Output, State
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
-load_figure_template("morph")
+# load_figure_template("morph")
 
 
 # Initial states for switches
@@ -33,6 +33,15 @@ STARTING_COORDINATES = [
     37.7749,
     -122.4194,
 ]  # change this to the starting coordinate of the launch
+
+GAUGE_RANGES = [
+    [0, 3275],  # Range for alt-gauge
+    [-15, 125],  # Range for ext-temp-gauge
+    [-30, 350],  # Range for velocity-gauge
+    [0, 127],  # Range for av-temp-gauge
+    [-30, 100],  # Range for accel-gauge
+    [0, 250],  # Range for engine-temp-gauge
+]
 
 coordinates = [STARTING_COORDINATES]
 error_data = {"status": "OK", "errors": []}
@@ -73,14 +82,14 @@ def create_bool_switches(id, left_label, right_label, switch_state, button_label
     return switch_row
 
 
-def create_gauge(gauge_id, label_text, value=5):
+def create_gauge(gauge_id, label_text, min_range, max_range, value=5):
     fig = go.Figure(
         go.Indicator(
             mode="gauge+number",
             value=value,
             gauge={
                 "shape": "angular",
-                "axis": {"range": [0, 10]},
+                "axis": {"range": [min_range, max_range]},
                 "bar": {"color": "#FFA07A"},  # Use black to hide the bar
                 "bgcolor": "#FFA07A",
                 "threshold": {
@@ -112,7 +121,8 @@ def create_gps_card():
             [
                 html.H4("GPS", className="card-title"),
                 html.P("Coordinates: ", id="coordinates", className="card-text"),
-                html.P("Altitude: ", id="altitude", className="card-text"),
+                html.P("Altitude (m): ", id="altitude-m", className="card-text"),
+                html.P("Altitude (ft): ", id="altitude-ft", className="card-text"),
                 html.P("Signal Quality: ", id="signal_quality", className="card-text"),
                 html.P("GPS Fix: ", id="gps_fix", className="card-text"),
                 html.P("Antenna Status: ", id="antenna_status", className="card-text"),
@@ -129,22 +139,52 @@ gauges = dbc.Container(
             [
                 dbc.Col(
                     [
-                        create_gauge("custom-gauge1", "Speed"),
-                        create_gauge("custom-gauge2", "Temperature"),
+                        create_gauge(
+                            "alt-gauge",
+                            "Altitude (m)",
+                            GAUGE_RANGES[0][0],
+                            GAUGE_RANGES[0][1],
+                        ),
+                        create_gauge(
+                            "ext-temp-gauge",
+                            "External Temperature (°C)",
+                            GAUGE_RANGES[1][0],
+                            GAUGE_RANGES[1][1],
+                        ),
                     ],
                     width=4,
                 ),
                 dbc.Col(
                     [
-                        create_gauge("custom-gauge3", "Speed"),
-                        create_gauge("custom-gauge4", "Temperature"),
+                        create_gauge(
+                            "velocity-gauge",
+                            "Vertical Velocity (m/s)",
+                            GAUGE_RANGES[2][0],
+                            GAUGE_RANGES[2][1],
+                        ),
+                        create_gauge(
+                            "av-temp-gauge",
+                            "Internal/Av. Bay Temperature (°C)",
+                            GAUGE_RANGES[3][0],
+                            GAUGE_RANGES[3][1],
+                        ),
                     ],
                     width=4,
                 ),
                 dbc.Col(
                     [
-                        create_gauge("custom-gauge5", "Speed"),
-                        create_gauge("custom-gauge6", "Temperature"),
+                        create_gauge(
+                            "accel-gauge",
+                            "Acceleration (m/s^2)",
+                            GAUGE_RANGES[4][0],
+                            GAUGE_RANGES[4][1],
+                        ),
+                        create_gauge(
+                            "engine-temp-gauge",
+                            "Engine Bay Temperature (°C)",
+                            GAUGE_RANGES[5][0],
+                            GAUGE_RANGES[5][1],
+                        ),
                     ],
                     width=4,
                 ),
@@ -245,7 +285,7 @@ app.layout = dbc.Container(
                         fluid=True,
                     )
                 ),
-                dbc.Col(gauges),
+                dbc.Col(gauges, width=6),
             ],
             className="g-0",
         ),
@@ -310,12 +350,12 @@ def update_state_store(ground_state, camera_state, units_state, state_data):
 # Create a callback to update the gauges
 @app.callback(
     [
-        Output("custom-gauge1", "figure"),
-        Output("custom-gauge2", "figure"),
-        Output("custom-gauge3", "figure"),
-        Output("custom-gauge4", "figure"),
-        Output("custom-gauge5", "figure"),
-        Output("custom-gauge6", "figure"),
+        Output("alt-gauge", "figure"),
+        Output("ext-temp-gauge", "figure"),
+        Output("velocity-gauge", "figure"),
+        Output("av-temp-gauge", "figure"),
+        Output("accel-gauge", "figure"),
+        Output("engine-temp-gauge", "figure"),
     ],
     [Input("interval-component", "n_intervals")],
 )
@@ -323,14 +363,14 @@ def update_gauges(n):
     # Simulate data update, replace with actual data retrieval
     new_values = [random.uniform(0, 10) for _ in range(6)]
     gauges = []
-    for value in new_values:
+    for value, gauge_range in zip(new_values, GAUGE_RANGES):
         fig = go.Figure(
             go.Indicator(
                 mode="gauge+number",
                 value=value,
                 gauge={
                     "shape": "angular",
-                    "axis": {"range": [0, 10]},
+                    "axis": {"range": gauge_range},
                     "bar": {"color": "#FFA07A"},  # Use black to hide the bar
                     "bgcolor": "#FFA07A",
                     "threshold": {
@@ -355,7 +395,8 @@ def update_gauges(n):
 @app.callback(
     [
         Output("coordinates", "children"),
-        Output("altitude", "children"),
+        Output("altitude-m", "children"),
+        Output("altitude-ft", "children"),
         Output("signal_quality", "children"),
         Output("gps_fix", "children"),
         Output("antenna_status", "children"),
@@ -366,7 +407,8 @@ def update_gps_status(n):
     # Simulate data update, replace with actual data retrieval
     new_values = {
         "coordinates": f"Lat: {random.uniform(-90, 90):.2f}, Lon: {random.uniform(-180, 180):.2f}",
-        "altitude": f"{random.uniform(0, 10000):.2f} m",
+        "altitude-m": f"{random.uniform(0, 10000):.2f} m",
+        "altitude-ft": f"{random.uniform(0, 10000):.2f} ft",
         "signal_quality": f"{random.randint(0, 100)}%",
         "gps_fix": "Yes" if random.choice([True, False]) else "No",
         "antenna_status": (
@@ -376,7 +418,8 @@ def update_gps_status(n):
 
     return (
         f"Coordinates: {new_values['coordinates']}",
-        f"Altitude: {new_values['altitude']}",
+        f"Altitude (m): {new_values['altitude-m']}",
+        f"Altitude (ft): {new_values['altitude-ft']}",
         f"Signal Quality: {new_values['signal_quality']}",
         f"GPS Fix: {new_values['gps_fix']}",
         f"Antenna Status: {new_values['antenna_status']}",
