@@ -290,12 +290,18 @@ app.layout = dbc.Container(
             className="g-0",
         ),
         dbc.Row(
-            dbc.Stack(
-                [
-                    dbc.Col(rocket_map, width=6),
-                    errorbox,
-                ]
-            )
+            [
+                dbc.Col(rocket_map, width=6),
+                errorbox,
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(dcc.Graph(id="temp-graph")),
+                dbc.Col(dcc.Graph(id="alt-graph")),
+                dbc.Col(dcc.Graph(id="vert-velo-graph")),
+                dbc.Col(dcc.Graph(id="accel-graph")),
+            ]
         ),
         dcc.Interval(
             id="interval-component",
@@ -358,36 +364,68 @@ def update_state_store(ground_state, camera_state, units_state, state_data):
         Output("engine-temp-gauge", "figure"),
     ],
     [Input("interval-component", "n_intervals")],
+    State("state-store", "data"),
 )
-def update_gauges(n):
+def update_gauges(n, state_store):
+
+    def imperial_conversion(index, value):
+        if index % 2 == 1:
+            return value
+        else:
+            return round(value * 3.280839895, 2)
+
     # Simulate data update, replace with actual data retrieval
     new_values = [random.uniform(0, 10) for _ in range(6)]
+    is_imperial_yuck = state_store.get("units")
     gauges = []
-    for value, gauge_range in zip(new_values, GAUGE_RANGES):
-        fig = go.Figure(
-            go.Indicator(
-                mode="gauge+number",
-                value=value,
-                gauge={
-                    "shape": "angular",
-                    "axis": {"range": gauge_range},
-                    "bar": {"color": "#FFA07A"},  # Use black to hide the bar
-                    "bgcolor": "#FFA07A",
-                    "threshold": {
-                        "line": {"color": "#800020", "width": 4},
-                        "thickness": 0.75,
-                        "value": value,
-                    },
-                },
-                domain={"x": [0, 1], "y": [0, 1]},
-            )
-        )
 
-        fig.update_layout(
-            margin=dict(l=20, r=20, t=50, b=20),
-            height=200,
-        )
-        gauges.append(fig)
+    if is_imperial_yuck:
+        for index, (value, gauge_range) in enumerate(zip(new_values, GAUGE_RANGES)):
+            fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=imperial_conversion(index, value),
+                    gauge={
+                        "shape": "angular",
+                        "axis": {"range": gauge_range},
+                        "bar": {"color": "#FFA07A"},  # Use black to hide the bar
+                        "bgcolor": "#FFA07A",
+                        "threshold": {
+                            "line": {"color": "#800020", "width": 4},
+                            "thickness": 0.75,
+                            "value": value,
+                        },
+                    },
+                    domain={"x": [0, 1], "y": [0, 1]},
+                )
+            )
+
+            fig.update_layout(
+                margin=dict(l=20, r=20, t=50, b=20),
+                height=200,
+            )
+            gauges.append(fig)
+    else:
+        for value, gauge_range in zip(new_values, GAUGE_RANGES):
+            fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=value,
+                    gauge={
+                        "shape": "angular",
+                        "axis": {"range": gauge_range},
+                        "bar": {"color": "#FFA07A"},  # Use black to hide the bar
+                        "bgcolor": "#FFA07A",
+                        "threshold": {
+                            "line": {"color": "#800020", "width": 4},
+                            "thickness": 0.75,
+                            "value": value,
+                        },
+                    },
+                    domain={"x": [0, 1], "y": [0, 1]},
+                )
+            )
+            gauges.append(fig)
 
     return gauges
 
@@ -409,7 +447,7 @@ def update_gps_status(n):
         "coordinates": f"Lat: {random.uniform(-90, 90):.2f}, Lon: {random.uniform(-180, 180):.2f}",
         "altitude-m": f"{random.uniform(0, 10000):.2f} m",
         "altitude-ft": f"{random.uniform(0, 10000):.2f} ft",
-        "signal_quality": f"{random.randint(0, 100)}%",
+        "signal_quality": f"{random.randint(0, 100)}",
         "gps_fix": "Yes" if random.choice([True, False]) else "No",
         "antenna_status": (
             "Connected" if random.choice([True, False]) else "Disconnected"
