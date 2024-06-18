@@ -57,6 +57,8 @@ void BBManager::initDatalog(File &file_stream)
         file_stream.print(",");
         file_stream.print("external temperature (C)"); // in Celcius
         file_stream.print(",");
+        file_stream.print("engine bay temperature (C)"); // in Celcius
+        file_stream.print(",");
         file_stream.print("av bay temperature (C)"); // in Celcius
         file_stream.print(",");
         file_stream.print("barometer temp (C)"); // in Celcius
