@@ -133,7 +133,7 @@ def add_values(rocket):
 
 
 def populate_infludb(rocket):
-    token = "AymmjKZLk5MdjFG5K___pvNY20FhDwoVvpFOg4wXEQQYMiMRJNeKpOf_Nfb0o49zpdEIyhgwzk7UxlLKx_7Eog=="
+    token = "b1IZkUyPFfN1-WOtxgQN8eYmpup1c61MZbioelVzqe7bQ3pIZgmxFDyly8WtOdqEL7LeG9o30Hs9lf-IrhozQA=="
     org = "TuftsRocketry"
     bucket = "bucket4"
     url = "http://localhost:8086/"

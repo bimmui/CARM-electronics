@@ -24,8 +24,8 @@
 #endif
 
 //! TODO: Change the frequencies
-#define RF95_FREQ_1 433.0
-#define RF95_FREQ_2 466.0
+#define RF95_FREQ_1 422.0
+// #define RF95_FREQ_2 466.0
 // #define RF96_FREQ_3 423.0
 // #define RF96_FREQ_4 423.0
 // #define RF96_FREQ_5 423.0
