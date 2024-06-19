@@ -124,8 +124,8 @@ void loop()
             Serial.print(",");
             Serial.print(launchdata.gps_fix);
             Serial.print(",");
-            Serial.print(launchdata.external_temp, DECIMAL_COUNT);
-            Serial.print(",");
+            // Serial.print(launchdata.external_temp, DECIMAL_COUNT);
+            // Serial.print(",");
             Serial.print(launchdata.temperature_avbay, DECIMAL_COUNT);
             Serial.print(",");
             Serial.print(launchdata.accel_z, DECIMAL_COUNT);
@@ -145,8 +145,8 @@ void loop()
             Serial.print(launchdata.gps_altitude, DECIMAL_COUNT);
             Serial.print(",");
             Serial.print(launchdata.gps_quality);
-            Serial.print(",");
-            Serial.print(launchdata.temperature_engbay, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.temperature_engbay, DECIMAL_COUNT);
             Serial.print(",");
             Serial.println(launchdata.gps_antenna_status);
         }
