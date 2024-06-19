@@ -12,6 +12,31 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 
 
+import multiprocessing
+import sys
+import time
+import datetime
+import pdb
+from queue import Empty
+from pprint import pprint
+from multiprocessing.managers import BaseManager
+
+
+import dash
+from dash import Dash, html, dcc, callback_context, no_update
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
+import dash_daq as daq
+import dash_leaflet as dl
+import plotly.graph_objects as go
+from dash.dependencies import Input, Output, State
+
+import influxdb_client, os, time
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+
+
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 # load_figure_template("morph")
@@ -30,8 +55,8 @@ INITIAL_STATE = {
 }
 
 STARTING_COORDINATES = [
-    37.7749,
-    -122.4194,
+    37.7749,     # latitude
+    -122.4194,   # longitude
 ]  # change this to the starting coordinate of the launch
 
 GAUGE_RANGES = [
@@ -45,6 +70,25 @@ GAUGE_RANGES = [
 
 coordinates = [STARTING_COORDINATES]
 error_data = {"status": "OK", "errors": []}
+
+
+
+
+
+class Rocket:
+
+    def __init__(self):
+        self.time_series_data = {"State": 0, "GPS Num Satellites": 0, "GPS Longitude": STARTING_COORDINATES[1], "GPS Latitude": STARTING_COORDINATES[0], "Gyro X": 0,   "Time": [], "Altitude": [], "Velocity": []}
+
+    # Need to make getter and setter funcs bc proxy objs are spawned by the manager,
+    #   so direct access is not possible
+    def set(self, min_dict):
+        for key, value in min_dict.items():
+            self.time_series_data[key].append(value)
+        # print(self.time_series_data)
+
+    def get(self):
+        return self.time_series_data
 
 
 # Fucntions to create components
@@ -120,12 +164,42 @@ def create_gps_card():
         dbc.CardBody(
             [
                 html.H4("GPS", className="card-title"),
-                html.P("Coordinates: ", id="coordinates", className="card-text"),
-                html.P("Altitude (m): ", id="altitude-m", className="card-text"),
-                html.P("Altitude (ft): ", id="altitude-ft", className="card-text"),
-                html.P("Signal Quality: ", id="signal_quality", className="card-text"),
-                html.P("GPS Fix: ", id="gps_fix", className="card-text"),
-                html.P("Antenna Status: ", id="antenna_status", className="card-text"),
+                html.P(
+                    [
+                        html.Span("Coordinates: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="coordinates", className="card-text"),
+                    ]
+                ),
+                html.P(
+                    [
+                        html.Span("Altitude (m): ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="altitude-m", className="card-text"),
+                    ]
+                ),
+                html.P(
+                    [
+                        html.Span("Altitude (ft): ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="altitude-ft", className="card-text"),
+                    ]
+                ),
+                html.P(
+                    [
+                        html.Span("Signal Quality: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="signal_quality", className="card-text"),
+                    ]
+                ),
+                html.P(
+                    [
+                        html.Span("GPS Fix: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="gps_fix", className="card-text"),
+                    ]
+                ),
+                html.P(
+                    [
+                        html.Span("Antenna Status: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(id="antenna_status", className="card-text"),
+                    ]
+                ),
             ]
         )
     )
@@ -141,7 +215,7 @@ gauges = dbc.Container(
                     [
                         create_gauge(
                             "alt-gauge",
-                            "Altitude (m)",
+                            "Altitude (m)/(ft)",
                             GAUGE_RANGES[0][0],
                             GAUGE_RANGES[0][1],
                         ),
@@ -158,7 +232,7 @@ gauges = dbc.Container(
                     [
                         create_gauge(
                             "velocity-gauge",
-                            "Vertical Velocity (m/s)",
+                            "Vertical Velocity (m/s)/(ft/s)",
                             GAUGE_RANGES[2][0],
                             GAUGE_RANGES[2][1],
                         ),
@@ -175,7 +249,7 @@ gauges = dbc.Container(
                     [
                         create_gauge(
                             "accel-gauge",
-                            "Acceleration (m/s^2)",
+                            "Acceleration (m/s^2)/(ft/s^2)",
                             GAUGE_RANGES[4][0],
                             GAUGE_RANGES[4][1],
                         ),
@@ -240,11 +314,11 @@ rocket_map = html.Div(
                 dl.Polyline(id="path", positions=coordinates),
             ],
             center=STARTING_COORDINATES,
+            attributionControl=False,
             zoom=5,
             style={"height": "50vh"},
             id="map",
         ),
-        dcc.Interval(id="interval-component", interval=2000, n_intervals=0),
     ]
 )
 
@@ -258,11 +332,6 @@ errorbox = dbc.Row(
                         [
                             html.Div(id="status-message"),
                             html.Ul(id="error-messages", style={"color": "red"}),
-                            dcc.Interval(
-                                id="interval-component",
-                                interval=2000,  # Update every 2 seconds
-                                n_intervals=0,
-                            ),
                         ]
                     ),
                 ]
@@ -425,6 +494,10 @@ def update_gauges(n, state_store):
                     domain={"x": [0, 1], "y": [0, 1]},
                 )
             )
+            fig.update_layout(
+                margin=dict(l=20, r=20, t=50, b=20),
+                height=200,
+            )
             gauges.append(fig)
 
     return gauges
@@ -455,12 +528,12 @@ def update_gps_status(n):
     }
 
     return (
-        f"Coordinates: {new_values['coordinates']}",
-        f"Altitude (m): {new_values['altitude-m']}",
-        f"Altitude (ft): {new_values['altitude-ft']}",
-        f"Signal Quality: {new_values['signal_quality']}",
-        f"GPS Fix: {new_values['gps_fix']}",
-        f"Antenna Status: {new_values['antenna_status']}",
+        f" {new_values['coordinates']}",
+        f" {new_values['altitude-m']}",
+        f" {new_values['altitude-ft']}",
+        f" {new_values['signal_quality']}",
+        f" {new_values['gps_fix']}",
+        f" {new_values['antenna_status']}",
     )
 
 
@@ -500,6 +573,28 @@ def update_card(n_intervals):
     error_messages = [html.Li(error) for error in error_data["errors"]]
 
     return status_message, error_messages
+
+
+@app.callback(
+    Output("temp-graphh", "figure"),
+    Output("alt-graphh", "figure"),
+    Output("vert-velo-graphh", "figure"),
+    Output("accel-graphh", "figure"),
+    Input("interval-component", "n_intervals"),
+)
+def update_graph_live(n):
+    data = rocketo_proxy.get()
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=data["Time"],
+            y=data["Altitude"],
+            mode="lines+markers",
+            name="Altitude",
+            hoverinfo="none",
+        )
+    )
 
 
 if __name__ == "__main__":
