@@ -21,6 +21,6 @@ def get_sensor_data(serial_obj):
 
 # Serial parameters
 PORT = "/dev/ttyACM0"
-BAUDRATE = 9600  # TODO: increase this
+BAUDRATE = 115200  # TODO: increase this
 
 serial_com = serial.Serial(PORT, BAUDRATE)

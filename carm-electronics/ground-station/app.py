@@ -1,22 +1,12 @@
 # Author(s):
 #   Daniel Opara <hello@danielopara.me>
-
-import dash
-import random
-from dash import Dash, html, dcc, callback_context, no_update
-import dash_bootstrap_components as dbc
-from dash_bootstrap_templates import load_figure_template
-import dash_daq as daq
-import dash_leaflet as dl
-import plotly.graph_objects as go
-from dash.dependencies import Input, Output, State
-
-
 import multiprocessing
 import sys
 import time
 import datetime
 import pdb
+import serial
+import numpy as np
 from queue import Empty
 from pprint import pprint
 from multiprocessing.managers import BaseManager
@@ -25,16 +15,15 @@ from multiprocessing.managers import BaseManager
 import dash
 from dash import Dash, html, dcc, callback_context, no_update
 import dash_bootstrap_components as dbc
-from dash_bootstrap_templates import load_figure_template
 import dash_daq as daq
 import dash_leaflet as dl
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 
+
 import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-
 
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
@@ -55,8 +44,8 @@ INITIAL_STATE = {
 }
 
 STARTING_COORDINATES = [
-    37.7749,     # latitude
-    -122.4194,   # longitude
+    37.7749,  # latitude
+    -122.4194,  # longitude
 ]  # change this to the starting coordinate of the launch
 
 GAUGE_RANGES = [
@@ -72,23 +61,92 @@ coordinates = [STARTING_COORDINATES]
 error_data = {"status": "OK", "errors": []}
 
 
-
-
-
 class Rocket:
 
     def __init__(self):
-        self.time_series_data = {"State": 0, "GPS Num Satellites": 0, "GPS Longitude": STARTING_COORDINATES[1], "GPS Latitude": STARTING_COORDINATES[0], "Gyro X": 0,   "Time": [], "Altitude": [], "Velocity": []}
+        self.time_series_data = {
+            "State": 0,
+            "GPS Num Satellites": 0,
+            "GPS Longitude": STARTING_COORDINATES[1],
+            "GPS Latitude": STARTING_COORDINATES[0],
+            "GPS Fix": 0,
+            "GPS Speed": 0,
+            "GPS Altitude": 0,
+            "GPS Quality": 0,
+            "GPS Antenna Status": 0,
+            "Gyro X": 0,
+            "Gyro Y": 0,
+            "Gyro Z": 0,
+            "Accel X": 0,
+            "Accel Y": 0,
+            "Accel Z": 0,
+            "Mag X": 0,
+            "Mag Y": 0,
+            "Mag Z": 0,
+            "Velocity Velocity": 0,
+            "Time": [],
+            "Altitude": [],
+            "Velocity": [],
+            "Avg Accel": [],
+            "Av. Bay Temp": [],
+        }
 
     # Need to make getter and setter funcs bc proxy objs are spawned by the manager,
     #   so direct access is not possible
     def set(self, min_dict):
         for key, value in min_dict.items():
-            self.time_series_data[key].append(value)
+            if isinstance(self.time_series_data[key], list):
+                self.time_series_data[key].append(value)
+            else:
+                self.time_series_data[key] = value
         # print(self.time_series_data)
 
     def get(self):
         return self.time_series_data
+
+
+def read_serial_data(rocket, port, baudrate, timeout=1):
+    try:
+        # Open the serial port
+        ser = serial.Serial(port, baudrate, timeout=timeout)
+
+        print(f"Connected to {port} at {baudrate} baudrate.")
+
+        while True:
+            if ser.in_waiting > 0:
+                data = ser.readline().decode("utf-8").strip().split(",")
+                print(f"Received data: {data}")
+                labeled_data = {
+                    "State": data[0],
+                    "GPS Num Satellites": data[1],
+                    "GPS Longitude": data[2],
+                    "GPS Latitude": data[3],
+                    "Gyro X": data[4],
+                    "Accel Y": data[5],
+                    "Gyro Y": data[6],
+                    "Velocity Velocity": data[7],
+                    "Gyro Z": data[8],
+                    "Accel X": data[9],
+                    "Altitude": data[10],
+                    "GPS Fix": data[11],
+                    "Av. Bay Temp": data[12],
+                    "Accel Z": data[13],
+                    "Mag X": data[14],
+                }
+                rocket.set(labeled_data)
+
+            # Sleep for a short duration to avoid busy-waiting
+            time.sleep(0.1)
+
+    except serial.SerialException as e:
+        print(f"Error: {e}")
+
+    except KeyboardInterrupt:
+        print("\nExiting...")
+
+    finally:
+        ser.close()
+        print("Serial port closed.")
 
 
 # Fucntions to create components
@@ -166,37 +224,55 @@ def create_gps_card():
                 html.H4("GPS", className="card-title"),
                 html.P(
                     [
-                        html.Span("Coordinates: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "Coordinates: ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="coordinates", className="card-text"),
                     ]
                 ),
                 html.P(
                     [
-                        html.Span("Altitude (m): ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "Altitude (m): ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="altitude-m", className="card-text"),
                     ]
                 ),
                 html.P(
                     [
-                        html.Span("Altitude (ft): ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "Altitude (ft): ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="altitude-ft", className="card-text"),
                     ]
                 ),
                 html.P(
                     [
-                        html.Span("Signal Quality: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "Signal Quality: ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="signal_quality", className="card-text"),
                     ]
                 ),
                 html.P(
                     [
-                        html.Span("GPS Fix: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "GPS Fix: ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="gps_fix", className="card-text"),
                     ]
                 ),
                 html.P(
                     [
-                        html.Span("Antenna Status: ", style={'fontWeight': 'bold', 'textDecoration': 'underline'}),
+                        html.Span(
+                            "Antenna Status: ",
+                            style={"fontWeight": "bold", "textDecoration": "underline"},
+                        ),
                         html.Span(id="antenna_status", className="card-text"),
                     ]
                 ),
