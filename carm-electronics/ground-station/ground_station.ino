@@ -95,60 +95,66 @@ void loop()
         if (rf95.recv((uint8_t *)buf, &len))
         {
             // the first word will always have the state in the first four bits
-            unsigned int *launchmode_d = unpack_noschema(buf);
-            launchmodedata launchdata = untransform_launchmode(launchmode_d); // TODO: rename the var
+            // unsigned int *launchmode_d = unpack_noschema(buf);
+            // launchmodedata launchdata = untransform_launchmode(launchmode_d); // TODO: rename the var
 
-            // Print all the data to serial so the parser can read it and send it to the db and dashboard
-            Serial.print(launchdata.curr_state);
-            Serial.print(",");
-            Serial.print(launchdata.gps_num_satellites);
-            Serial.print(",");
-            Serial.print(float(launchdata.gps_long / 1000000), GPS_DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(float(launchdata.gps_lat / 1000000), GPS_DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gyro_x, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.accel_y, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gyro_y, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.vert_velo, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gyro_z, DECIMAL_COUNT);
-            Serial.print(",");
-
-            Serial.print(launchdata.accel_x, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.altitude, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gps_fix);
-            Serial.print(",");
-            // Serial.print(launchdata.external_temp, DECIMAL_COUNT);
+            // // Print all the data to serial so the parser can read it and send it to the db and dashboard
+            // Serial.print(launchdata.curr_state);
             // Serial.print(",");
-            Serial.print(launchdata.temperature_avbay, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.accel_z, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.mag_y, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.mag_z, DECIMAL_COUNT);
-            Serial.print(",");
-
-            char failures_bits_str[17];
-            uint16_to_binary_string(launchdata.failures, failures_bits_str);
-            Serial.print(failures_bits_str);
-            Serial.print(",");
-
-            Serial.print(launchdata.gps_speed, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gps_altitude, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.print(launchdata.gps_quality);
+            // Serial.print(launchdata.gps_num_satellites);
             // Serial.print(",");
-            // Serial.print(launchdata.temperature_engbay, DECIMAL_COUNT);
-            Serial.print(",");
-            Serial.println(launchdata.gps_antenna_status);
+            // Serial.print(float(launchdata.gps_long / 1000000), GPS_DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(float(launchdata.gps_lat / 1000000), GPS_DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gyro_x, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.accel_y, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gyro_y, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.vert_velo, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gyro_z, DECIMAL_COUNT);
+            // Serial.print(",");
+
+            // Serial.print(launchdata.accel_x, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.altitude, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gps_fix);
+            // Serial.print(",");
+            // // Serial.print(launchdata.external_temp, DECIMAL_COUNT);
+            // // Serial.print(",");
+            // Serial.print(launchdata.temperature_avbay, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.accel_z, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.mag_y, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.mag_z, DECIMAL_COUNT);
+            // Serial.print(",");
+
+            // char failures_bits_str[17];
+            // uint16_to_binary_string(launchdata.failures, failures_bits_str);
+            // Serial.print(failures_bits_str);
+            // Serial.print(",");
+
+            // Serial.print(launchdata.gps_speed, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gps_altitude, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.print(launchdata.gps_quality);
+            // // Serial.print(",");
+            // // Serial.print(launchdata.temperature_engbay, DECIMAL_COUNT);
+            // Serial.print(",");
+            // Serial.println(launchdata.gps_antenna_status);
+
+            for (int i = 0; i < 4; i++) {
+                Serial.print(buf[i]);
+                Serial.print(",");
+            }
+            Serial.println(buf[4]);
         }
     }
 }
