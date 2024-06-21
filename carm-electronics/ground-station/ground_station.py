@@ -14,6 +14,7 @@ class Rocket:
 
     def __init__(self):
         self.time_series_data = {"Compressed Data": []}
+        self.written_data = []
 
     # Need to make getter and setter funcs bc proxy objs are spawned by the manager,
     #   so direct access is not possible
@@ -25,22 +26,28 @@ class Rocket:
     def get(self):
         return self.time_series_data
 
+    def get_written(self):
+        return self.written_data
 
-def read_serial_data(rocket, port, baudrate, timeout=1):
+    def add_written(self, tuple_data):
+        self.written_data.append(tuple_data)
+
+
+def read_serial_data(rocket, timeout=1):
     try:
         # Open the serial port
-        ser = serial.Serial(port, baudrate, timeout=timeout)
+        ser = serial.Serial("COM11", 115200, timeout=timeout)
 
-        print(f"Connected to {port} at {baudrate} baudrate.")
+        print(f"Connected to COM11 at 115200 baudrate.")
 
         while True:
             if ser.in_waiting > 0:
-                data = ser.readline().decode("utf-8").strip().split(",")
-                print(f"Received data: {data}")
-                labeled_data = {}
+                data = ser.readline().decode("utf-8").strip()
+                labeled_data = {"Compressed Data": data}
                 rocket.set(labeled_data)
 
             # Sleep for a short duration to avoid busy-waiting
+            print(data)
             time.sleep(0.1)
 
     except serial.SerialException as e:
@@ -49,19 +56,11 @@ def read_serial_data(rocket, port, baudrate, timeout=1):
     except KeyboardInterrupt:
         print("\nExiting...")
 
-    finally:
-        ser.close()
-        print("Serial port closed.")
 
-
-def write_to_csv(rocket, filename):
+def write_to_csv(rocket):
     # Gather the data to be written to the CSV
     while True:
-        data_to_write = {
-            k: v
-            for k, v in rocket.time_series_data.items()
-            if isinstance(v, list) and v
-        }
+        data_to_write = {k: v for k, v in rocket.get().items()}
 
         if not data_to_write:
             return
@@ -70,7 +69,11 @@ def write_to_csv(rocket, filename):
         headers = data_to_write.keys()
         rows = zip(*data_to_write.values())
 
-        with open(filename, "a", newline="") as csvfile:
+        with open(
+            "compresseddata.csv",
+            "a",
+            newline="",
+        ) as csvfile:
             csvwriter = csv.writer(csvfile)
 
             # Write headers if the file is empty
@@ -80,9 +83,9 @@ def write_to_csv(rocket, filename):
             for row in rows:
                 # Convert the row to a tuple for hashable comparison
                 row_tuple = tuple(row)
-                if row_tuple not in rocket.written_data:
+                if row_tuple not in rocket.get_written():
                     csvwriter.writerow(row)
-                    rocket.written_data.add(row_tuple)
+                    rocket.add_written(row_tuple)
 
 
 if __name__ == "__main__":
@@ -92,14 +95,11 @@ if __name__ == "__main__":
     inst = manager.Rocket()
 
     p1 = multiprocessing.Process(target=write_to_csv, args=[inst])
-    p2 = multiprocessing.Process(target=dashboard, args=[inst])
-    p3 = multiprocessing.Process(target=populate_infludb, args=[inst])
+    p2 = multiprocessing.Process(target=read_serial_data, args=[inst])
 
-    p1.start()
-    time.sleep(3)
     p2.start()
-    p3.start()
+    time.sleep(3)
+    p1.start()
 
-    p1.join()
     p2.join()
-    p3.join()
+    p1.join()
